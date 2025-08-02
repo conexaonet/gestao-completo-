@@ -53,8 +53,8 @@
 
 <!-- Status de Vencimentos -->
 <div class="row mb-4">
-    <div class="col-md-2">
-        <div class="card stats-card danger card-hover" style="cursor: pointer;" onclick="carregarContasPorStatus('vencidas')">
+    <div class="col-md-2 col-6 mb-3">
+        <div class="card stats-card danger card-hover h-100" style="cursor: pointer;" onclick="carregarContasPorStatus('vencidas')">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
@@ -72,8 +72,8 @@
             </div>
         </div>
     </div>
-    <div class="col-md-2">
-        <div class="card stats-card warning card-hover" style="cursor: pointer;" onclick="carregarContasPorStatus('hoje')">
+    <div class="col-md-2 col-6 mb-3">
+        <div class="card stats-card warning card-hover h-100" style="cursor: pointer;" onclick="carregarContasPorStatus('hoje')">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
@@ -91,8 +91,8 @@
             </div>
         </div>
     </div>
-    <div class="col-md-2">
-        <div class="card stats-card info card-hover" style="cursor: pointer;" onclick="carregarContasPorStatus('amanha')">
+    <div class="col-md-2 col-6 mb-3">
+        <div class="card stats-card info card-hover h-100" style="cursor: pointer;" onclick="carregarContasPorStatus('amanha')">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
@@ -110,8 +110,8 @@
             </div>
         </div>
     </div>
-    <div class="col-md-2">
-        <div class="card stats-card primary card-hover" style="cursor: pointer;" onclick="carregarContasPorStatus('pendentes')">
+    <div class="col-md-2 col-6 mb-3">
+        <div class="card stats-card primary card-hover h-100" style="cursor: pointer;" onclick="carregarContasPorStatus('pendentes')">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
@@ -129,8 +129,8 @@
             </div>
         </div>
     </div>
-    <div class="col-md-2">
-        <div class="card stats-card success card-hover" style="cursor: pointer;" onclick="carregarContasPorStatus('recorrentes')">
+    <div class="col-md-2 col-6 mb-3">
+        <div class="card stats-card success card-hover h-100" style="cursor: pointer;" onclick="carregarContasPorStatus('recorrentes')">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
@@ -231,6 +231,7 @@
             </div>
             <div class="modal-body">
                 <form id="form-conta">
+                    {% csrf_token %}
                     <div class="mb-3">
                         <label class="form-label">Descrição *</label>
                         <input type="text" class="form-control" name="descricao" required>
