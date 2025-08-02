@@ -1,0 +1,349 @@
+{% extends 'dev_base.html' %}
+{% load static %}
+
+{% block title %}Análise por Categoria - Gestão Empresarial{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-chart-pie me-2"></i>
+                Análise por Categoria
+            </h1>
+            <div class="d-flex gap-2">
+                <input type="date" class="form-control" id="data-inicial" style="width: auto;">
+                <input type="date" class="form-control" id="data-final" style="width: auto;">
+                <button class="btn btn-primary" onclick="carregarRelatorio()">
+                    <i class="fas fa-search me-1"></i>Buscar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cards de Resumo -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card stats-card primary card-hover">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-1">Total Contas</h6>
+                        <h3 class="mb-0" id="total-contas">R$ 0,00</h3>
+                    </div>
+                    <div class="text-end">
+                        <i class="fas fa-file-invoice-dollar fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stats-card danger card-hover">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-1">Total Despesas</h6>
+                        <h3 class="mb-0" id="total-despesas">R$ 0,00</h3>
+                    </div>
+                    <div class="text-end">
+                        <i class="fas fa-receipt fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stats-card info card-hover">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-1">Total Geral</h6>
+                        <h3 class="mb-0" id="total-geral">R$ 0,00</h3>
+                    </div>
+                    <div class="text-end">
+                        <i class="fas fa-chart-line fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Gráficos -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card card-hover">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-pie me-2"></i>
+                    Distribuição por Categoria
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="grafico-distribuicao" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card card-hover">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>
+                    Contas vs Despesas por Categoria
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="grafico-comparacao" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tabela Detalhada -->
+<div class="row">
+    <div class="col-12">
+        <div class="card card-hover">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-table me-2"></i>
+                    Análise Detalhada por Categoria
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Categoria</th>
+                                <th>Contas Pendentes</th>
+                                <th>Contas Pagas</th>
+                                <th>Total Contas</th>
+                                <th>Despesas</th>
+                                <th>Total Geral</th>
+                                <th>% Contas</th>
+                                <th>% Despesas</th>
+                                <th>Quantidade</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabela-categorias">
+                            <tr>
+                                <td colspan="9" class="text-center text-muted">Carregando...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+let graficoDistribuicao = null;
+let graficoComparacao = null;
+
+$(document).ready(function() {
+    // Definir datas padrão (últimos 6 meses)
+    const hoje = new Date();
+    const dataInicial = new Date();
+    dataInicial.setMonth(hoje.getMonth() - 6);
+    
+    $('#data-final').val(hoje.toISOString().split('T')[0]);
+    $('#data-inicial').val(dataInicial.toISOString().split('T')[0]);
+    
+    carregarRelatorio();
+});
+
+function formatarMoeda(valor) {
+    return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+    }).format(valor);
+}
+
+function formatarPercentual(valor) {
+    return valor.toFixed(1) + '%';
+}
+
+function carregarRelatorio() {
+    const dataInicial = $('#data-inicial').val();
+    const dataFinal = $('#data-final').val();
+    
+    fetch(`/api/contas/relatorios/por_categoria/?data_inicial=${dataInicial}&data_final=${dataFinal}`)
+        .then(response => response.json())
+        .then(data => {
+            atualizarCards(data.resumo);
+            atualizarGraficos(data.categorias);
+            atualizarTabela(data.categorias);
+        })
+        .catch(error => {
+            console.error('Erro ao carregar relatório:', error);
+            mostrarNotificacao('Erro ao carregar relatório', 'error');
+        });
+}
+
+function atualizarCards(resumo) {
+    $('#total-contas').text(formatarMoeda(resumo.total_contas));
+    $('#total-despesas').text(formatarMoeda(resumo.total_despesas));
+    $('#total-geral').text(formatarMoeda(resumo.total_geral));
+}
+
+function atualizarGraficos(categorias) {
+    // Gráfico de Distribuição
+    const ctxDistribuicao = document.getElementById('grafico-distribuicao').getContext('2d');
+    if (graficoDistribuicao) {
+        graficoDistribuicao.destroy();
+    }
+    
+    const dadosDistribuicao = {
+        labels: categorias.map(cat => cat.nome),
+        datasets: [{
+            data: categorias.map(cat => cat.total_geral),
+            backgroundColor: categorias.map(cat => cat.cor),
+            borderColor: categorias.map(cat => cat.cor),
+            borderWidth: 2
+        }]
+    };
+    
+    graficoDistribuicao = new Chart(ctxDistribuicao, {
+        type: 'doughnut',
+        data: dadosDistribuicao,
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentual = ((context.parsed / total) * 100).toFixed(1);
+                            return context.label + ': ' + formatarMoeda(context.parsed) + ' (' + percentual + '%)';
+                        }
+                    }
+                }
+            }
+        }
+    });
+    
+    // Gráfico de Comparação
+    const ctxComparacao = document.getElementById('grafico-comparacao').getContext('2d');
+    if (graficoComparacao) {
+        graficoComparacao.destroy();
+    }
+    
+    const dadosComparacao = {
+        labels: categorias.map(cat => cat.nome),
+        datasets: [
+            {
+                label: 'Contas',
+                data: categorias.map(cat => cat.total_contas),
+                backgroundColor: categorias.map(cat => cat.cor + '80'),
+                borderColor: categorias.map(cat => cat.cor),
+                borderWidth: 1
+            },
+            {
+                label: 'Despesas',
+                data: categorias.map(cat => cat.despesas),
+                backgroundColor: categorias.map(cat => cat.cor + '40'),
+                borderColor: categorias.map(cat => cat.cor),
+                borderWidth: 1
+            }
+        ]
+    };
+    
+    graficoComparacao = new Chart(ctxComparacao, {
+        type: 'bar',
+        data: dadosComparacao,
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.dataset.label + ': ' + formatarMoeda(context.parsed);
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return formatarMoeda(value);
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function atualizarTabela(categorias) {
+    let html = '';
+    
+    if (categorias.length === 0) {
+        html = '<tr><td colspan="9" class="text-center text-muted">Nenhuma categoria encontrada</td></tr>';
+    } else {
+        categorias.forEach(cat => {
+            const totalQuantidade = cat.quantidade_contas + cat.quantidade_despesas;
+            
+            html += `
+                <tr>
+                    <td>
+                        <span class="badge" style="background-color: ${cat.cor}; color: white;">
+                            ${cat.nome}
+                        </span>
+                    </td>
+                    <td><strong>${formatarMoeda(cat.contas_pendentes)}</strong></td>
+                    <td><strong>${formatarMoeda(cat.contas_pagas)}</strong></td>
+                    <td><strong>${formatarMoeda(cat.total_contas)}</strong></td>
+                    <td><strong>${formatarMoeda(cat.despesas)}</strong></td>
+                    <td><strong>${formatarMoeda(cat.total_geral)}</strong></td>
+                    <td>
+                        <span class="badge bg-primary">${formatarPercentual(cat.percentual_contas)}</span>
+                    </td>
+                    <td>
+                        <span class="badge bg-danger">${formatarPercentual(cat.percentual_despesas)}</span>
+                    </td>
+                    <td>
+                        <span class="badge bg-secondary">${totalQuantidade}</span>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+    
+    $('#tabela-categorias').html(html);
+}
+
+function mostrarNotificacao(mensagem, tipo) {
+    const alertClass = tipo === 'success' ? 'alert-success' : 'alert-danger';
+    const icon = tipo === 'success' ? 'fas fa-check' : 'fas fa-exclamation-triangle';
+    
+    const alert = `
+        <div class="alert ${alertClass} alert-dismissible fade show position-fixed" 
+             style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;">
+            <i class="${icon} me-2"></i>
+            ${mensagem}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    $('body').append(alert);
+    
+    setTimeout(() => {
+        $('.alert').fadeOut();
+    }, 5000);
+}
+</script>
+{% endblock %} 

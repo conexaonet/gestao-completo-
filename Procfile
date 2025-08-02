@@ -1,0 +1,1 @@
+web: gunicorn gestao_empresarial.wsgi --log-file - 

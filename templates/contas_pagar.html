@@ -1,0 +1,1001 @@
+{% extends 'dev_base.html' %}
+{% load static %}
+
+{% block title %}Contas a Pagar - Gestão Empresarial{% endblock %}
+
+{% block content %}
+<style>
+    .stats-card {
+        transition: all 0.3s ease;
+    }
+    
+    .stats-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .stats-card.active-filter {
+        border: 3px solid #007bff;
+        box-shadow: 0 0 0 0.2rem rgba(0,123,255,0.25);
+    }
+    
+    .card-hover:hover {
+        transform: translateY(-2px);
+    }
+    
+    .fornecedor-card {
+        transition: all 0.3s ease;
+    }
+    
+    .fornecedor-card:hover {
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .stats-card.primary {
+        background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+        color: white;
+    }
+</style>
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-file-invoice-dollar me-2"></i>
+                Contas a Pagar
+            </h1>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalConta">
+                <i class="fas fa-plus me-2"></i>
+                Nova Conta
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Status de Vencimentos -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card stats-card danger card-hover" style="cursor: pointer;" onclick="carregarContasPorStatus('vencidas')">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-1">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Vencidas
+                        </h6>
+                        <h2 class="mb-0" id="total-vencidas">R$ 0,00</h2>
+                        <small class="text-white-50" id="quantidade-vencidas">0 contas</small>
+                    </div>
+                    <div class="text-end">
+                        <i class="fas fa-exclamation-triangle fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card warning card-hover" style="cursor: pointer;" onclick="carregarContasPorStatus('hoje')">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-1">
+                            <i class="fas fa-calendar-day me-2"></i>
+                            Vencem Hoje
+                        </h6>
+                        <h2 class="mb-0" id="total-hoje">R$ 0,00</h2>
+                        <small class="text-white-50" id="quantidade-hoje">0 contas</small>
+                    </div>
+                    <div class="text-end">
+                        <i class="fas fa-calendar-day fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card info card-hover" style="cursor: pointer;" onclick="carregarContasPorStatus('amanha')">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-1">
+                            <i class="fas fa-calendar-week me-2"></i>
+                            Vencem Amanhã
+                        </h6>
+                        <h2 class="mb-0" id="total-amanha">R$ 0,00</h2>
+                        <small class="text-white-50" id="quantidade-amanha">0 contas</small>
+                    </div>
+                    <div class="text-end">
+                        <i class="fas fa-calendar-week fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card primary card-hover" style="cursor: pointer;" onclick="carregarContasPorStatus('pendentes')">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-1">
+                            <i class="fas fa-clock me-2"></i>
+                            Pendentes
+                        </h6>
+                        <h2 class="mb-0" id="total-pendentes">R$ 0,00</h2>
+                        <small class="text-white-50" id="quantidade-pendentes">0 contas</small>
+                    </div>
+                    <div class="text-end">
+                        <i class="fas fa-clock fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filtros -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card card-hover">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-filter me-2"></i>
+                    Filtros
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label">Status</label>
+                        <select class="form-select" id="filtro-status">
+                            <option value="">Todos</option>
+                            <option value="pendente">Pendente</option>
+                            <option value="pago">Pago</option>
+                            <option value="vencido">Vencido</option>
+                            <option value="vencidas">Vencidas</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Categoria</label>
+                        <select class="form-select" id="filtro-categoria">
+                            <option value="">Todas</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Buscar</label>
+                        <input type="text" class="form-control" id="filtro-busca" placeholder="Buscar por fornecedor...">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">&nbsp;</label>
+                        <button class="btn btn-outline-secondary w-100" onclick="limparFiltros()">
+                            <i class="fas fa-times me-1"></i>
+                            Limpar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Lista de Fornecedores -->
+<div class="row">
+    <div class="col-12">
+        <div class="card card-hover">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-building me-2"></i>
+                    Contas por Fornecedor
+                </h5>
+            </div>
+            <div class="card-body">
+                <div id="lista-fornecedores">
+                    <div class="text-center">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Carregando...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Nova Conta -->
+<div class="modal fade" id="modalConta" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-plus me-2"></i>
+                    Nova Conta a Pagar
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="form-conta">
+                    <div class="mb-3">
+                        <label class="form-label">Descrição *</label>
+                        <input type="text" class="form-control" name="descricao" required>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Valor Total *</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">R$</span>
+                                    <input type="text" class="form-control" name="valor" placeholder="0,00" required>
+                                </div>
+                                <small class="form-text text-muted">Digite apenas números (ex: 1000,50)</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Vencimento *</label>
+                                <input type="date" class="form-control" name="data_vencimento" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Categoria *</label>
+                                <select class="form-select" name="categoria_id" required>
+                                    <option value="">Selecione...</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Fornecedor</label>
+                                <select class="form-select" name="fornecedor_id">
+                                    <option value="">Selecione...</option>
+                                </select>
+                                <small class="form-text text-muted">Opcional - para melhor organização</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Status</label>
+                                <select class="form-select" name="status">
+                                    <option value="pendente">Pendente</option>
+                                    <option value="pago">Pago</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">&nbsp;</label>
+                                <div class="d-flex gap-2">
+                                    <button type="button" class="btn btn-outline-info btn-sm" onclick="abrirModalFornecedor()">
+                                        <i class="fas fa-plus me-1"></i>Novo Fornecedor
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="limparFornecedor()">
+                                        <i class="fas fa-times me-1"></i>Limpar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Seção de Parcelamento -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="eh_parcelado" name="eh_parcelado">
+                                <label class="form-check-label" for="eh_parcelado">
+                                    <strong>Parcelar esta conta</strong>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="card-body" id="parcelamento-opcoes" style="display: none;">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Número de Parcelas</label>
+                                        <input type="number" class="form-control" name="numero_parcelas" min="2" max="12" value="2">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Valor da Parcela</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">R$</span>
+                                            <input type="text" class="form-control" name="valor_parcela" readonly>
+                                        </div>
+                                        <small class="form-text text-muted">Calculado automaticamente</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>Informação:</strong> O valor total será dividido igualmente entre as parcelas. 
+                                Cada parcela terá o mesmo valor.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Observações</label>
+                        <textarea class="form-control" name="observacoes" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>Cancelar
+                </button>
+                <button type="button" class="btn btn-primary" onclick="salvarConta()">
+                    <i class="fas fa-save me-1"></i>Salvar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    carregarCategorias();
+    carregarFornecedores();
+    carregarStatusVencimentos();
+    
+    // Event listeners para filtros
+    $('#filtro-status, #filtro-categoria').on('change', function() {
+        carregarContas();
+    });
+    
+    $('#filtro-busca').on('input', function() {
+        carregarContas();
+    });
+    
+    // Controle de parcelamento
+    $('#eh_parcelado').change(function() {
+        if ($(this).is(':checked')) {
+            $('#parcelamento-opcoes').show();
+            calcularParcela();
+        } else {
+            $('#parcelamento-opcoes').hide();
+        }
+    });
+    
+    // Calcular valor da parcela quando valor total ou número de parcelas mudar
+    $('input[name="valor"], input[name="numero_parcelas"]').on('input', function() {
+        if ($('#eh_parcelado').is(':checked')) {
+            calcularParcela();
+        }
+    });
+    
+    // Formatação automática de valores monetários
+    $('input[name="valor"]').on('input', function() {
+        formatarCampoValor($(this));
+    });
+});
+
+// Função para formatar valores em moeda brasileira
+function formatarMoeda(valor) {
+    return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+    }).format(valor);
+}
+
+// Função para formatar campo de valor enquanto digita
+function formatarCampoValor(campo) {
+    let valor = campo.val().replace(/[^\d,]/g, ''); // Remove tudo exceto números e vírgula
+    
+    // Se não tem vírgula, adiciona automaticamente após 2 dígitos
+    if (!valor.includes(',')) {
+        if (valor.length > 2) {
+            valor = valor.slice(0, -2) + ',' + valor.slice(-2);
+        }
+    }
+    
+    // Formata o valor
+    if (valor) {
+        // Remove vírgulas existentes para contar
+        let numero = valor.replace(/,/g, '');
+        
+        // Se tem mais de 2 dígitos, adiciona vírgula decimal
+        if (numero.length > 2) {
+            numero = numero.slice(0, -2) + ',' + numero.slice(-2);
+        }
+        
+        // Adiciona pontos para milhares
+        let partes = numero.split(',');
+        partes[0] = partes[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        
+        valor = partes.join(',');
+    }
+    
+    campo.val(valor);
+}
+
+// Função para converter valor formatado para número
+function converterValorFormatado(valorFormatado) {
+    if (!valorFormatado) return 0;
+    
+    // Remove pontos e substitui vírgula por ponto
+    let valor = valorFormatado.replace(/\./g, '').replace(',', '.');
+    return parseFloat(valor) || 0;
+}
+
+function calcularParcela() {
+    const valorTotal = converterValorFormatado($('input[name="valor"]').val());
+    const numeroParcelas = parseInt($('input[name="numero_parcelas"]').val()) || 2;
+    
+    if (valorTotal > 0 && numeroParcelas > 1) {
+        const valorParcela = valorTotal / numeroParcelas;
+        $('input[name="valor_parcela"]').val(formatarMoeda(valorParcela).replace('R$', '').trim());
+    }
+}
+
+function carregarStatusVencimentos() {
+    // Carregar contas vencidas
+    fetch('/api/contas/contas-pagar/vencidas/')
+        .then(response => response.json())
+        .then(data => {
+            $('#total-vencidas').text(formatarMoeda(data.total || 0));
+            $('#quantidade-vencidas').text(`${data.quantidade} conta${data.quantidade !== 1 ? 's' : ''}`);
+        })
+        .catch(error => {
+            console.error('Erro ao carregar contas vencidas:', error);
+            $('#total-vencidas').text('R$ 0,00');
+            $('#quantidade-vencidas').text('0 contas');
+        });
+    
+    // Carregar contas de hoje
+    fetch('/api/contas/contas-pagar/hoje/')
+        .then(response => response.json())
+        .then(data => {
+            $('#total-hoje').text(formatarMoeda(data.total || 0));
+            $('#quantidade-hoje').text(`${data.quantidade} conta${data.quantidade !== 1 ? 's' : ''}`);
+        })
+        .catch(error => {
+            console.error('Erro ao carregar contas de hoje:', error);
+            $('#total-hoje').text('R$ 0,00');
+            $('#quantidade-hoje').text('0 contas');
+        });
+    
+    // Carregar contas de amanhã
+    fetch('/api/contas/contas-pagar/amanha/')
+        .then(response => response.json())
+        .then(data => {
+            $('#total-amanha').text(formatarMoeda(data.total || 0));
+            $('#quantidade-amanha').text(`${data.quantidade} conta${data.quantidade !== 1 ? 's' : ''}`);
+        })
+        .catch(error => {
+            console.error('Erro ao carregar contas de amanhã:', error);
+            $('#total-amanha').text('R$ 0,00');
+            $('#quantidade-amanha').text('0 contas');
+        });
+    
+    // Carregar contas pendentes
+    fetch('/api/contas/contas-pagar/pendentes/')
+        .then(response => response.json())
+        .then(data => {
+            $('#total-pendentes').text(formatarMoeda(data.total || 0));
+            $('#quantidade-pendentes').text(`${data.quantidade} conta${data.quantidade !== 1 ? 's' : ''}`);
+        })
+        .catch(error => {
+            console.error('Erro ao carregar contas pendentes:', error);
+            $('#total-pendentes').text('R$ 0,00');
+            $('#quantidade-pendentes').text('0 contas');
+        });
+}
+
+function carregarCategorias() {
+    fetch('/api/contas/categorias/')
+        .then(response => response.json())
+        .then(data => {
+            const selectCategorias = $('select[name="categoria_id"], #filtro-categoria');
+            selectCategorias.each(function() {
+                const isFilter = $(this).attr('id') === 'filtro-categoria';
+                if (!isFilter) {
+                    $(this).html('<option value="">Selecione...</option>');
+                } else {
+                    $(this).html('<option value="">Todas</option>');
+                }
+                
+                data.forEach(cat => {
+                    $(this).append(`<option value="${cat.id}">${cat.nome}</option>`);
+                });
+            });
+        })
+        .catch(error => {
+            console.error('Erro ao carregar categorias:', error);
+        });
+}
+
+function carregarFornecedores() {
+    // Carregar fornecedores para o select
+    fetch('/api/fornecedores/fornecedores/')
+        .then(response => response.json())
+        .then(data => {
+            const selectFornecedores = $('select[name="fornecedor_id"]');
+            selectFornecedores.empty();
+            selectFornecedores.append('<option value="">Selecione...</option>');
+            
+            data.forEach(fornecedor => {
+                selectFornecedores.append(`<option value="${fornecedor.id}">${fornecedor.nome}</option>`);
+            });
+        })
+        .catch(error => {
+            console.error('Erro ao carregar fornecedores:', error);
+        });
+    
+    // Carregar lista de fornecedores com contas
+    carregarContas();
+}
+
+function carregarContas() {
+    const status = $('#filtro-status').val();
+    const categoria = $('#filtro-categoria').val();
+    const busca = $('#filtro-busca').val();
+    
+    let url = '/api/contas/contas-pagar/por_fornecedor/';
+    const params = new URLSearchParams();
+    
+    if (status) {
+        if (status === 'vencidas') {
+            // Filtro especial para contas vencidas
+            url = '/api/contas/contas-pagar/vencidas/';
+        } else {
+            params.append('status', status);
+        }
+    }
+    
+    if (categoria) {
+        params.append('categoria', categoria);
+    }
+    
+    if (busca) {
+        params.append('search', busca);
+    }
+    
+    if (params.toString()) {
+        url += '?' + params.toString();
+    }
+    
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            if (status === 'vencidas') {
+                // Formatar dados de contas vencidas
+                const contasVencidas = data.contas || [];
+                const fornecedores = {};
+                
+                contasVencidas.forEach(conta => {
+                    const fornecedor = conta.descricao || 'Sem fornecedor';
+                    if (!fornecedores[fornecedor]) {
+                        fornecedores[fornecedor] = {
+                            fornecedor: fornecedor,
+                            total_valor: 0,
+                            total_parcelas: 0,
+                            parcelas_pagas: 0,
+                            parcelas_pendentes: 0,
+                            primeiro_vencimento: null,
+                            ultimo_vencimento: null,
+                            categoria: conta.categoria || 'Sem categoria',
+                            categoria_cor: '#6c757d',
+                            contas: []
+                        };
+                    }
+                    
+                    fornecedores[fornecedor].total_valor += parseFloat(conta.valor);
+                    fornecedores[fornecedor].total_parcelas += 1;
+                    fornecedores[fornecedor].parcelas_pendentes += 1;
+                    fornecedores[fornecedor].contas.push(conta);
+                });
+                
+                data = Object.values(fornecedores);
+            }
+            
+            exibirContas(data);
+        })
+        .catch(error => {
+            console.error('Erro ao carregar contas:', error);
+            $('#lista-contas').html('<div class="alert alert-danger">Erro ao carregar contas</div>');
+        });
+}
+
+function carregarContasPorStatus(status) {
+    // Limpar outros filtros
+    $('#filtro-categoria').val('');
+    $('#filtro-busca').val('');
+    
+    // Definir o endpoint baseado no tipo
+    let url = '/api/contas/contas-pagar/por_fornecedor/';
+    
+    switch(status) {
+        case 'vencidas':
+            url = '/api/contas/contas-pagar/vencidas/';
+            break;
+        case 'hoje':
+            url = '/api/contas/contas-pagar/hoje/';
+            break;
+        case 'amanha':
+            url = '/api/contas/contas-pagar/amanha/';
+            break;
+        case 'pendentes':
+            url = '/api/contas/contas-pagar/pendentes/';
+            break;
+    }
+    
+    // Limpar filtro de status
+    $('#filtro-status').val('');
+    
+    // Adicionar indicador visual de filtro ativo
+    $('.stats-card').removeClass('active-filter');
+    $(`.stats-card[onclick*="${status}"]`).addClass('active-filter');
+    
+    // Carregar contas usando o endpoint específico
+    carregarContasPorEndpoint(url);
+    
+    // Mostrar mensagem de filtro ativo
+    mostrarMensagemFiltro(status);
+}
+
+function carregarContasPorEndpoint(url) {
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            // Formatar dados para exibição
+            let fornecedores = {};
+            
+            if (data.contas) {
+                // Dados vindos de endpoints específicos (hoje, amanha, vencidas, pendentes)
+                data.contas.forEach(conta => {
+                    const fornecedor = conta.descricao || 'Sem fornecedor';
+                    if (!fornecedores[fornecedor]) {
+                        fornecedores[fornecedor] = {
+                            fornecedor: fornecedor,
+                            total_valor: 0,
+                            total_parcelas: 0,
+                            parcelas_pagas: 0,
+                            parcelas_pendentes: 0,
+                            primeiro_vencimento: null,
+                            ultimo_vencimento: null,
+                            categoria: conta.categoria || 'Sem categoria',
+                            categoria_cor: '#6c757d',
+                            contas: []
+                        };
+                    }
+                    
+                    fornecedores[fornecedor].total_valor += parseFloat(conta.valor);
+                    fornecedores[fornecedor].total_parcelas += 1;
+                    fornecedores[fornecedor].parcelas_pendentes += 1;
+                    fornecedores[fornecedor].contas.push(conta);
+                });
+                
+                data = Object.values(fornecedores);
+            }
+            
+            exibirContas(data);
+        })
+        .catch(error => {
+            console.error('Erro ao carregar contas:', error);
+            $('#lista-fornecedores').html('<div class="alert alert-danger">Erro ao carregar contas</div>');
+        });
+}
+
+function mostrarMensagemFiltro(status) {
+    let mensagem = '';
+    switch(status) {
+        case 'vencidas':
+            mensagem = 'Mostrando contas vencidas';
+            break;
+        case 'hoje':
+            mensagem = 'Mostrando contas que vencem hoje';
+            break;
+        case 'amanha':
+            mensagem = 'Mostrando contas que vencem amanhã';
+            break;
+        case 'pendentes':
+            mensagem = 'Mostrando todas as contas pendentes';
+            break;
+    }
+    
+    // Criar ou atualizar mensagem de filtro
+    let filtroMsg = $('#filtro-mensagem');
+    if (filtroMsg.length === 0) {
+        filtroMsg = $('<div id="filtro-mensagem" class="alert alert-info alert-dismissible fade show" role="alert"></div>');
+        $('.row.mb-4').after(filtroMsg);
+    }
+    
+    filtroMsg.html(`
+        <i class="fas fa-filter me-2"></i>
+        <strong>Filtro ativo:</strong> ${mensagem}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" onclick="limparFiltros()"></button>
+    `);
+}
+
+function toggleFornecedor(fornecedor) {
+    const detalhesId = `detalhes-${fornecedor.replace(/\s+/g, '-')}`;
+    const iconId = `icon-${fornecedor.replace(/\s+/g, '-')}`;
+    
+    const detalhes = document.getElementById(detalhesId);
+    const icon = document.getElementById(iconId);
+    
+    if (detalhes.style.display === 'none') {
+        detalhes.style.display = 'block';
+        icon.className = 'fas fa-chevron-up';
+    } else {
+        detalhes.style.display = 'none';
+        icon.className = 'fas fa-chevron-down';
+    }
+}
+
+function salvarConta() {
+    const form = document.getElementById('form-conta');
+    const formData = new FormData(form);
+    
+    // Converter dados do formulário para JSON
+    const data = {};
+    formData.forEach((value, key) => {
+        if (key === 'eh_parcelado') {
+            data[key] = value === 'on';
+        } else if (key === 'valor' || key === 'numero_parcelas' || key === 'valor_parcela') {
+            if (key === 'valor') {
+                data[key] = converterValorFormatado(value);
+            } else if (key === 'valor_parcela') {
+                data[key] = converterValorFormatado(value);
+            } else {
+                data[key] = parseFloat(value) || 0;
+            }
+        } else if (key === 'categoria_id' || key === 'fornecedor_id') {
+            // Converter IDs para números
+            data[key] = value ? parseInt(value) : null;
+        } else {
+            data[key] = value;
+        }
+    });
+    
+    // Validar campos obrigatórios
+    if (!data.categoria_id) {
+        mostrarNotificacao('Por favor, selecione uma categoria', 'error');
+        return;
+    }
+    
+    if (!data.descricao || !data.valor || !data.data_vencimento) {
+        mostrarNotificacao('Por favor, preencha todos os campos obrigatórios', 'error');
+        return;
+    }
+    
+    fetch('/api/contas/contas-pagar/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.id) {
+            mostrarNotificacao('Conta salva com sucesso!', 'success');
+            $('#modalConta').modal('hide');
+            form.reset();
+            $('#parcelamento-opcoes').hide();
+            carregarFornecedores();
+            carregarStatusVencimentos();
+        } else {
+            mostrarNotificacao('Erro ao salvar conta: ' + JSON.stringify(data), 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        mostrarNotificacao('Erro ao salvar conta', 'error');
+    });
+}
+
+function marcarPago(id) {
+    if (confirm('Marcar esta conta como paga?')) {
+        fetch(`/api/contas/contas-pagar/${id}/marcar_pago/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            mostrarNotificacao('Conta marcada como paga!', 'success');
+            carregarFornecedores();
+            carregarStatusVencimentos();
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            mostrarNotificacao('Erro ao marcar como paga', 'error');
+        });
+    }
+}
+
+function excluirConta(id) {
+    if (confirm('Tem certeza que deseja excluir esta conta?')) {
+        fetch(`/api/contas/contas-pagar/${id}/`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                mostrarNotificacao('Conta excluída!', 'success');
+                carregarFornecedores();
+                carregarStatusVencimentos();
+            } else {
+                mostrarNotificacao('Erro ao excluir conta', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            mostrarNotificacao('Erro ao excluir conta', 'error');
+        });
+    }
+}
+
+function limparFiltros() {
+    $('#filtro-status, #filtro-categoria').val('');
+    $('#filtro-busca').val('');
+    
+    // Remover indicador visual de filtro ativo
+    $('.stats-card').removeClass('active-filter');
+    
+    // Remover mensagem de filtro
+    $('#filtro-mensagem').remove();
+    
+    carregarContas();
+}
+
+function abrirModalFornecedor() {
+    // Redirecionar para a página de fornecedores
+    window.open('/fornecedores/', '_blank');
+}
+
+function limparFornecedor() {
+    $('select[name="fornecedor_id"]').val('');
+}
+
+function mostrarNotificacao(mensagem, tipo) {
+    const alertClass = tipo === 'success' ? 'alert-success' : 'alert-danger';
+    const icon = tipo === 'success' ? 'fas fa-check' : 'fas fa-exclamation-triangle';
+    
+    const alert = `
+        <div class="alert ${alertClass} alert-dismissible fade show position-fixed" 
+             style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;">
+            <i class="${icon} me-2"></i>
+            ${mensagem}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    $('body').append(alert);
+    
+    // Remover alerta após 5 segundos
+    setTimeout(() => {
+        $('.alert').fadeOut();
+    }, 5000);
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+function exibirContas(data) {
+    let html = '';
+    
+    if (data.length === 0) {
+        html = '<div class="text-center"><p class="text-muted">Nenhum fornecedor encontrado</p></div>';
+    } else {
+        data.forEach(fornecedor => {
+            const progresso = fornecedor.total_parcelas > 0 ? 
+                (fornecedor.parcelas_pagas / fornecedor.total_parcelas) * 100 : 0;
+            
+            html += `
+                <div class="card mb-3 fornecedor-card" data-fornecedor="${fornecedor.fornecedor}">
+                    <div class="card-header bg-light" style="cursor: pointer;" onclick="toggleFornecedor('${fornecedor.fornecedor}')">
+                        <div class="row align-items-center">
+                            <div class="col-md-4">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-building me-2"></i>
+                                    <strong>${fornecedor.fornecedor}</strong>
+                                </h6>
+                                <small class="text-muted">
+                                    <span class="badge" style="background-color: ${fornecedor.categoria_cor}">
+                                        ${fornecedor.categoria}
+                                    </span>
+                                </small>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-center">
+                                    <h5 class="mb-0 text-success">${formatarMoeda(fornecedor.total_valor)}</h5>
+                                    <small class="text-muted">Total</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-center">
+                                    <h6 class="mb-0">${fornecedor.total_parcelas}</h6>
+                                    <small class="text-muted">Parcelas</small>
+                                    <div class="progress mt-1" style="height: 4px;">
+                                        <div class="progress-bar bg-success" style="width: ${progresso}%"></div>
+                                    </div>
+                                    <small class="text-muted">${fornecedor.parcelas_pagas} pagas / ${fornecedor.parcelas_pendentes} pendentes</small>
+                                </div>
+                            </div>
+                            <div class="col-md-2 text-end">
+                                <i class="fas fa-chevron-down" id="icon-${fornecedor.fornecedor.replace(/\s+/g, '-')}"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body" id="detalhes-${fornecedor.fornecedor.replace(/\s+/g, '-')}" style="display: none;">
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Parcela</th>
+                                        <th>Valor</th>
+                                        <th>Vencimento</th>
+                                        <th>Status</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${fornecedor.contas.map(conta => {
+                                        const statusClass = conta.status === 'pendente' ? 'warning' : 'success';
+                                        const parcelaInfo = conta.eh_parcelado ? 
+                                            `Parcela ${conta.parcela_atual}/${conta.numero_parcelas}` : 'Única';
+                                        
+                                        return `
+                                            <tr>
+                                                <td>${parcelaInfo}</td>
+                                                <td><strong>${formatarMoeda(conta.valor)}</strong></td>
+                                                <td>
+                                                    <i class="fas fa-calendar me-1"></i>
+                                                    ${new Date(conta.data_vencimento).toLocaleDateString('pt-BR')}
+                                                </td>
+                                                <td>
+                                                    <span class="badge bg-${statusClass}">
+                                                        ${conta.status.charAt(0).toUpperCase() + conta.status.slice(1)}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <div class="btn-group btn-group-sm">
+                                                        ${conta.status === 'pendente' ? 
+                                                            `<button class="btn btn-outline-success" onclick="marcarPago(${conta.id})" title="Marcar como pago">
+                                                                <i class="fas fa-check"></i>
+                                                            </button>` : ''
+                                                            }
+                                                        <button class="btn btn-outline-danger" onclick="excluirConta(${conta.id})" title="Excluir">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        `;
+                                    }).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+    }
+    
+    $('#lista-fornecedores').html(html);
+}
+</script>
+{% endblock %}
+

@@ -1,0 +1,762 @@
+{% extends 'dev_base.html' %}
+{% load static %}
+
+{% block title %}Gerenciador de Senhas - Gestão Empresarial{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-key me-2"></i>
+                Gerenciador de Senhas
+            </h1>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalSenha">
+                <i class="fas fa-plus me-2"></i>
+                Nova Senha
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Estatísticas -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card card-hover">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>
+                    Estatísticas
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row" id="estatisticas">
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h3 class="text-primary" id="total-senhas">0</h3>
+                            <p class="text-muted">Total de Senhas</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h3 class="text-warning" id="favoritos">0</h3>
+                            <p class="text-muted">Favoritas</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h3 class="text-success" id="com-arquivos">0</h3>
+                            <p class="text-muted">Com Arquivos</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h3 class="text-info" id="expiradas">0</h3>
+                            <p class="text-muted">Expiradas</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filtros -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card card-hover">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-filter me-2"></i>
+                    Filtros
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <label class="form-label">Buscar</label>
+                        <input type="text" class="form-control" id="buscar-senha" placeholder="Buscar por título, URL ou usuário...">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Categoria</label>
+                        <select class="form-select" id="filtro-categoria">
+                            <option value="">Todas</option>
+                            <option value="banco">Banco</option>
+                            <option value="email">E-mail</option>
+                            <option value="social">Rede Social</option>
+                            <option value="trabalho">Trabalho</option>
+                            <option value="pessoal">Pessoal</option>
+                            <option value="outros">Outros</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Filtro</label>
+                        <select class="form-select" id="filtro-tipo">
+                            <option value="">Todas</option>
+                            <option value="favoritos">Apenas Favoritas</option>
+                            <option value="expiradas">Expiradas</option>
+                            <option value="com-arquivos">Com Arquivos</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">&nbsp;</label>
+                        <button class="btn btn-outline-warning w-100" onclick="gerarSenhaSegura()">
+                            <i class="fas fa-random me-1"></i>Gerar Senha
+                        </button>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">&nbsp;</label>
+                        <button class="btn btn-outline-secondary w-100" onclick="limparFiltros()">
+                            <i class="fas fa-times me-1"></i>Limpar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Lista de Senhas -->
+<div class="row">
+    <div class="col-12">
+        <div class="card card-hover">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-list me-2"></i>
+                    Minhas Senhas
+                </h5>
+            </div>
+            <div class="card-body">
+                <div id="lista-senhas">
+                    <div class="text-center">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Carregando...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Nova/Editar Senha -->
+<div class="modal fade" id="modalSenha" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modal-title">
+                    <i class="fas fa-plus me-2"></i>
+                    Nova Senha
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="form-senha">
+                    <input type="hidden" name="id" id="senha-id">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Título *</label>
+                                <input type="text" class="form-control" name="titulo" id="titulo" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Categoria</label>
+                                <select class="form-select" name="categoria" id="categoria">
+                                    <option value="outros">Outros</option>
+                                    <option value="banco">Banco</option>
+                                    <option value="email">E-mail</option>
+                                    <option value="social">Rede Social</option>
+                                    <option value="trabalho">Trabalho</option>
+                                    <option value="pessoal">Pessoal</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">URL</label>
+                                <input type="url" class="form-control" name="url" id="url" placeholder="https://exemplo.com">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Data de Expiração</label>
+                                <input type="date" class="form-control" name="data_expiracao" id="data_expiracao">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Usuário/Login *</label>
+                                <input type="text" class="form-control" name="usuario_login" id="usuario_login" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Tags</label>
+                                <input type="text" class="form-control" name="tags" id="tags" placeholder="tag1, tag2, tag3">
+                                <small class="text-muted">Separadas por vírgula</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Senha *</label>
+                        <div class="input-group">
+                            <input type="password" class="form-control" name="senha" id="campo-senha" required>
+                            <button class="btn btn-outline-secondary" type="button" onclick="toggleSenha()">
+                                <i class="fas fa-eye" id="icon-senha"></i>
+                            </button>
+                            <button class="btn btn-outline-warning" type="button" onclick="gerarSenhaSegura()">
+                                <i class="fas fa-random"></i>
+                            </button>
+                        </div>
+                        <div class="mt-2">
+                            <div class="progress" style="height: 5px;">
+                                <div class="progress-bar" id="forca-senha" role="progressbar" style="width: 0%"></div>
+                            </div>
+                            <small class="text-muted" id="forca-texto">Força da senha: 0%</small>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Observações</label>
+                        <textarea class="form-control" name="observacoes" id="observacoes" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Arquivo</label>
+                        <input type="file" class="form-control" name="arquivo" id="arquivo" accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png">
+                        <small class="text-muted">Aceita PDF, Word, texto e imagens (máx. 10MB)</small>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="favorito" id="favorito">
+                            <label class="form-check-label" for="favorito">
+                                Marcar como favorita
+                            </label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>Cancelar
+                </button>
+                <button type="button" class="btn btn-primary" onclick="salvarSenha()">
+                    <i class="fas fa-save me-1"></i>Salvar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    carregarSenhas();
+    carregarEstatisticas();
+    
+    // Filtros
+    $('#buscar-senha').on('input', function() {
+        carregarSenhas();
+    });
+    
+    $('#filtro-tipo, #filtro-categoria').change(function() {
+        carregarSenhas();
+    });
+    
+    // Calcular força da senha em tempo real
+    $('#campo-senha').on('input', function() {
+        calcularForcaSenha($(this).val());
+    });
+    
+    // Limpar modal ao fechar
+    $('#modalSenha').on('hidden.bs.modal', function() {
+        limparFormulario();
+    });
+});
+
+function carregarEstatisticas() {
+    fetch('/api/senhas/senhas/estatisticas/')
+        .then(response => response.json())
+        .then(data => {
+            $('#total-senhas').text(data.total_senhas);
+            $('#favoritos').text(data.favoritos);
+            $('#com-arquivos').text(data.com_arquivos);
+            $('#expiradas').text(data.expiradas || 0);
+        })
+        .catch(error => {
+            console.error('Erro ao carregar estatísticas:', error);
+        });
+}
+
+function carregarSenhas() {
+    const busca = $('#buscar-senha').val();
+    const filtro = $('#filtro-tipo').val();
+    const categoria = $('#filtro-categoria').val();
+    
+    let url = '/api/senhas/senhas/';
+    const params = new URLSearchParams();
+    
+    if (busca) {
+        params.append('q', busca);
+    }
+    
+    if (filtro === 'favoritos') {
+        url = '/api/senhas/senhas/favoritos/';
+    }
+    
+    if (params.toString()) {
+        url += '?' + params.toString();
+    }
+    
+    console.log('Carregando senhas de:', url);
+    
+    fetch(url)
+        .then(response => {
+            console.log('Response status:', response.status);
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Dados recebidos:', data);
+            let html = '';
+            
+            if (data.length === 0) {
+                html = `
+                    <div class="text-center py-5">
+                        <i class="fas fa-key fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">Nenhuma senha encontrada</h5>
+                        <p class="text-muted">Clique em "Nova Senha" para adicionar sua primeira senha</p>
+                    </div>
+                `;
+            } else {
+                data.forEach(senha => {
+                    const categoriaClass = getCategoriaClass(senha.categoria);
+                    const expiradaClass = senha.esta_expirada ? 'text-danger' : '';
+                    const forcaClass = getForcaClass(senha.forca_senha);
+                    
+                    html += `
+                        <div class="card mb-3 card-hover">
+                            <div class="card-body">
+                                <div class="row align-items-center">
+                                    <div class="col-md-8">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <h5 class="card-title mb-0 ${expiradaClass}">
+                                                ${senha.titulo}
+                                                ${senha.favorito ? '<i class="fas fa-star text-warning ms-2"></i>' : ''}
+                                            </h5>
+                                            <span class="badge ${categoriaClass} ms-2">${getCategoriaLabel(senha.categoria)}</span>
+                                        </div>
+                                        <p class="card-text mb-1">
+                                            <strong>Usuário:</strong> ${senha.usuario_login}
+                                        </p>
+                                        ${senha.url ? `<p class="card-text mb-1"><strong>URL:</strong> <a href="${senha.url}" target="_blank">${senha.url}</a></p>` : ''}
+                                        ${senha.observacoes ? `<p class="card-text mb-1"><small class="text-muted">${senha.observacoes}</small></p>` : ''}
+                                        ${senha.tags_list && senha.tags_list.length > 0 ? `
+                                            <p class="card-text mb-1">
+                                                <small class="text-muted">
+                                                    <i class="fas fa-tags me-1"></i>
+                                                    ${senha.tags_list.map(tag => `<span class="badge bg-light text-dark me-1">${tag}</span>`).join('')}
+                                                </small>
+                                            </p>
+                                        ` : ''}
+                                        <div class="d-flex align-items-center mb-1">
+                                            ${senha.arquivo ? `
+                                                <span class="text-info me-3">
+                                                    <i class="fas fa-paperclip me-1"></i>
+                                                    <a href="/api/senhas/senhas/${senha.id}/download_arquivo/" target="_blank">
+                                                        Download do arquivo
+                                                    </a>
+                                                </span>
+                                            ` : ''}
+                                            <span class="badge ${forcaClass}">
+                                                <i class="fas fa-shield-alt me-1"></i>
+                                                Força: ${senha.forca_senha}%
+                                            </span>
+                                        </div>
+                                        ${senha.data_expiracao ? `
+                                            <p class="card-text mb-0">
+                                                <small class="${senha.esta_expirada ? 'text-danger' : 'text-muted'}">
+                                                    <i class="fas fa-calendar me-1"></i>
+                                                    Expira em: ${formatarData(senha.data_expiracao)}
+                                                    ${senha.dias_para_expiracao !== null ? ` (${senha.dias_para_expiracao} dias)` : ''}
+                                                </small>
+                                            </p>
+                                        ` : ''}
+                                    </div>
+                                    <div class="col-md-4 text-end">
+                                        <div class="btn-group">
+                                            <button class="btn btn-outline-info btn-sm" onclick="revelarSenha(${senha.id})" title="Ver Senha">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button class="btn btn-outline-warning btn-sm" onclick="toggleFavorito(${senha.id})" title="Favoritar">
+                                                <i class="fas fa-star"></i>
+                                            </button>
+                                            <button class="btn btn-outline-primary btn-sm" onclick="editarSenha(${senha.id})" title="Editar">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-outline-danger btn-sm" onclick="excluirSenha(${senha.id})" title="Excluir">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            
+            $('#lista-senhas').html(html);
+        })
+        .catch(error => {
+            console.error('Erro ao carregar senhas:', error);
+            $('#lista-senhas').html(`
+                <div class="text-center text-danger">
+                    <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+                    <p>Erro ao carregar senhas</p>
+                </div>
+            `);
+        });
+}
+
+function salvarSenha() {
+    const form = document.getElementById('form-senha');
+    const formData = new FormData(form);
+    const senhaId = $('#senha-id').val();
+    
+    const url = senhaId ? `/api/senhas/senhas/${senhaId}/` : '/api/senhas/senhas/';
+    const method = senhaId ? 'PUT' : 'POST';
+    
+    console.log('Enviando dados:', formData);
+    
+    fetch(url, {
+        method: method,
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: formData
+    })
+    .then(response => {
+        console.log('Response status:', response.status);
+        if (!response.ok) {
+            return response.text().then(text => {
+                console.log('Response text:', text);
+                throw new Error(`HTTP ${response.status}: ${text.substring(0, 200)}`);
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.id) {
+            mostrarNotificacao('Senha salva com sucesso!', 'success');
+            $('#modalSenha').modal('hide');
+            limparFormulario();
+            carregarSenhas();
+            carregarEstatisticas();
+        } else {
+            mostrarNotificacao('Erro ao salvar senha: ' + JSON.stringify(data), 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Erro detalhado:', error);
+        let mensagemErro = 'Erro ao salvar senha';
+        
+        if (error.message) {
+            mensagemErro += ': ' + error.message;
+        }
+        
+        mostrarNotificacao(mensagemErro, 'error');
+    });
+}
+
+function editarSenha(id) {
+    fetch(`/api/senhas/senhas/${id}/`)
+        .then(response => response.json())
+        .then(data => {
+            $('#senha-id').val(data.id);
+            $('#titulo').val(data.titulo);
+            $('#url').val(data.url);
+            $('#usuario_login').val(data.usuario_login);
+            $('#observacoes').val(data.observacoes);
+            $('#categoria').val(data.categoria);
+            $('#tags').val(data.tags);
+            $('#data_expiracao').val(data.data_expiracao);
+            $('#favorito').prop('checked', data.favorito);
+            
+            // Não preencher a senha por segurança
+            $('#campo-senha').val('');
+            
+            $('#modal-title').html('<i class="fas fa-edit me-2"></i>Editar Senha');
+            $('#modalSenha').modal('show');
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            mostrarNotificacao('Erro ao carregar dados da senha', 'error');
+        });
+}
+
+function limparFormulario() {
+    $('#form-senha')[0].reset();
+    $('#senha-id').val('');
+    $('#modal-title').html('<i class="fas fa-plus me-2"></i>Nova Senha');
+    $('#forca-senha').css('width', '0%');
+    $('#forca-texto').text('Força da senha: 0%');
+}
+
+function calcularForcaSenha(senha) {
+    let score = 0;
+    
+    // Comprimento
+    if (senha.length >= 8) score += 20;
+    if (senha.length >= 12) score += 10;
+    
+    // Caracteres especiais
+    if (/[!@#$%^&*()_+\-=\[\]{}|;:,.<>?]/.test(senha)) score += 20;
+    
+    // Números
+    if (/\d/.test(senha)) score += 20;
+    
+    // Letras maiúsculas e minúsculas
+    if (/[a-z]/.test(senha) && /[A-Z]/.test(senha)) score += 20;
+    
+    // Variedade de caracteres
+    const uniqueChars = new Set(senha).size;
+    if (uniqueChars >= 8) score += 10;
+    
+    score = Math.min(score, 100);
+    
+    $('#forca-senha').css('width', score + '%');
+    $('#forca-texto').text(`Força da senha: ${score}%`);
+    
+    // Cor baseada na força
+    let colorClass = 'bg-danger';
+    if (score >= 80) colorClass = 'bg-success';
+    else if (score >= 60) colorClass = 'bg-warning';
+    else if (score >= 40) colorClass = 'bg-info';
+    
+    $('#forca-senha').removeClass('bg-danger bg-warning bg-info bg-success').addClass(colorClass);
+}
+
+function gerarSenhaSegura() {
+    const length = 16;
+    const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+-=[]{}|;:,.<>?';
+    let senha = '';
+    
+    for (let i = 0; i < length; i++) {
+        senha += charset.charAt(Math.floor(Math.random() * charset.length));
+    }
+    
+    $('#campo-senha').val(senha);
+    calcularForcaSenha(senha);
+}
+
+function revelarSenha(id) {
+    fetch(`/api/senhas/senhas/${id}/revelar_senha/`)
+        .then(response => response.json())
+        .then(data => {
+            const modal = `
+                <div class="modal fade" id="modalRevelar" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">
+                                    <i class="fas fa-eye me-2"></i>
+                                    Senha Revelada
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body text-center">
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    Certifique-se de que ninguém está vendo sua tela!
+                                </div>
+                                <h6>${data.titulo}</h6>
+                                <div class="input-group mb-3">
+                                    <input type="text" class="form-control" value="${data.senha}" id="senha-revelada" readonly>
+                                    <button class="btn btn-outline-secondary" type="button" onclick="copiarSenha()">
+                                        <i class="fas fa-copy"></i>
+                                    </button>
+                                </div>
+                                <small class="text-muted">A senha será ocultada quando você fechar este modal</small>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Remover modal anterior se existir
+            $('#modalRevelar').remove();
+            
+            // Adicionar novo modal
+            $('body').append(modal);
+            $('#modalRevelar').modal('show');
+            
+            // Ocultar senha quando modal for fechado
+            $('#modalRevelar').on('hidden.bs.modal', function() {
+                $('#senha-revelada').val('********');
+            });
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            mostrarNotificacao('Erro ao revelar senha', 'error');
+        });
+}
+
+function copiarSenha() {
+    const senha = document.getElementById('senha-revelada').value;
+    navigator.clipboard.writeText(senha).then(() => {
+        mostrarNotificacao('Senha copiada para a área de transferência!', 'success');
+    });
+}
+
+function toggleFavorito(id) {
+    fetch(`/api/senhas/senhas/${id}/toggle_favorito/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        mostrarNotificacao('Status de favorito atualizado!', 'success');
+        carregarSenhas();
+        carregarEstatisticas();
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        mostrarNotificacao('Erro ao atualizar favorito', 'error');
+    });
+}
+
+function excluirSenha(id) {
+    if (confirm('Tem certeza que deseja excluir esta senha?')) {
+        fetch(`/api/senhas/senhas/${id}/`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                mostrarNotificacao('Senha excluída com sucesso!', 'success');
+                carregarSenhas();
+                carregarEstatisticas();
+            } else {
+                throw new Error('Erro ao excluir senha');
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            mostrarNotificacao('Erro ao excluir senha', 'error');
+        });
+    }
+}
+
+function toggleSenha() {
+    const campo = $('#campo-senha');
+    const icon = $('#icon-senha');
+    
+    if (campo.attr('type') === 'password') {
+        campo.attr('type', 'text');
+        icon.removeClass('fa-eye').addClass('fa-eye-slash');
+    } else {
+        campo.attr('type', 'password');
+        icon.removeClass('fa-eye-slash').addClass('fa-eye');
+    }
+}
+
+function limparFiltros() {
+    $('#buscar-senha').val('');
+    $('#filtro-tipo').val('');
+    $('#filtro-categoria').val('');
+    carregarSenhas();
+}
+
+// Funções auxiliares
+function getCategoriaClass(categoria) {
+    const classes = {
+        'banco': 'bg-primary',
+        'email': 'bg-success',
+        'social': 'bg-info',
+        'trabalho': 'bg-warning',
+        'pessoal': 'bg-secondary',
+        'outros': 'bg-dark'
+    };
+    return classes[categoria] || 'bg-dark';
+}
+
+function getCategoriaLabel(categoria) {
+    const labels = {
+        'banco': 'Banco',
+        'email': 'E-mail',
+        'social': 'Rede Social',
+        'trabalho': 'Trabalho',
+        'pessoal': 'Pessoal',
+        'outros': 'Outros'
+    };
+    return labels[categoria] || 'Outros';
+}
+
+function getForcaClass(forca) {
+    if (forca >= 80) return 'bg-success';
+    if (forca >= 60) return 'bg-warning';
+    if (forca >= 40) return 'bg-info';
+    return 'bg-danger';
+}
+
+function formatarData(data) {
+    if (!data) return '';
+    return new Date(data).toLocaleDateString('pt-BR');
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+function mostrarNotificacao(mensagem, tipo) {
+    const alertClass = tipo === 'success' ? 'alert-success' : 
+                      tipo === 'error' ? 'alert-danger' : 
+                      tipo === 'warning' ? 'alert-warning' : 'alert-info';
+    
+    const html = `
+        <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+            ${mensagem}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    // Remover notificações anteriores
+    $('.alert').remove();
+    
+    // Adicionar nova notificação
+    $('.container').prepend(html);
+    
+    // Auto-remover após 5 segundos
+    setTimeout(() => {
+        $('.alert').fadeOut();
+    }, 5000);
+}
+</script>
+{% endblock %}
+

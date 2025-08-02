@@ -1,0 +1,460 @@
+{% extends 'dev_base.html' %}
+{% load static %}
+
+{% block title %}Dashboard - Gestão Empresarial{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">
+            <i class="fas fa-tachometer-alt me-2"></i>
+            Dashboard
+        </h1>
+    </div>
+</div>
+
+<!-- Status de Vencimentos -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card stats-card danger card-hover">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-1">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Vencidas
+                        </h6>
+                        <h2 class="mb-0" id="contas-vencidas">R$ 0,00</h2>
+                        <small class="text-white-50" id="quantidade-vencidas">0 contas</small>
+                    </div>
+                    <div class="text-end">
+                        <i class="fas fa-exclamation-triangle fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stats-card warning card-hover">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-1">
+                            <i class="fas fa-calendar-day me-2"></i>
+                            Vencem Hoje
+                        </h6>
+                        <h2 class="mb-0" id="contas-hoje">R$ 0,00</h2>
+                        <small class="text-white-50" id="quantidade-hoje">0 contas</small>
+                    </div>
+                    <div class="text-end">
+                        <i class="fas fa-calendar-day fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stats-card info card-hover">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-1">
+                            <i class="fas fa-calendar-week me-2"></i>
+                            Vencem Amanhã
+                        </h6>
+                        <h2 class="mb-0" id="contas-amanha">R$ 0,00</h2>
+                        <small class="text-white-50" id="quantidade-amanha">0 contas</small>
+                    </div>
+                    <div class="text-end">
+                        <i class="fas fa-calendar-week fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cards de Resumo -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card stats-card card-hover">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-1">
+                            <i class="fas fa-file-invoice-dollar me-2"></i>
+                            Contas Pendentes
+                        </h6>
+                        <h2 class="mb-0" id="contas-pendentes">-</h2>
+                    </div>
+                    <div class="text-end">
+                        <i class="fas fa-file-invoice-dollar fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card stats-card success card-hover">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-1">
+                            <i class="fas fa-receipt me-2"></i>
+                            Despesas do Mês
+                        </h6>
+                        <h2 class="mb-0" id="despesas-mes">-</h2>
+                    </div>
+                    <div class="text-end">
+                        <i class="fas fa-receipt fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card stats-card info card-hover">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-1">
+                            <i class="fas fa-key me-2"></i>
+                            Senhas Salvas
+                        </h6>
+                        <h2 class="mb-0" id="senhas-total">-</h2>
+                    </div>
+                    <div class="text-end">
+                        <i class="fas fa-key fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card stats-card warning card-hover">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-1">
+                            <i class="fas fa-file-alt me-2"></i>
+                            Notas Fiscais
+                        </h6>
+                        <h2 class="mb-0" id="notas-total">-</h2>
+                    </div>
+                    <div class="text-end">
+                        <i class="fas fa-file-alt fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Ações Rápidas -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card card-hover">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-bolt me-2"></i>
+                    Ações Rápidas
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <a href="{% url 'core:contas_pagar' %}" class="btn btn-outline-primary w-100">
+                            <i class="fas fa-plus me-2"></i>
+                            Nova Conta a Pagar
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="{% url 'core:despesas' %}" class="btn btn-outline-success w-100">
+                            <i class="fas fa-plus me-2"></i>
+                            Nova Despesa
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="{% url 'core:senhas' %}" class="btn btn-outline-info w-100">
+                            <i class="fas fa-plus me-2"></i>
+                            Nova Senha
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="{% url 'core:notas_fiscais' %}" class="btn btn-outline-warning w-100">
+                            <i class="fas fa-plus me-2"></i>
+                            Nova Nota Fiscal
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Contas Vencidas -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card card-hover">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Contas Vencidas
+                </h5>
+            </div>
+            <div class="card-body">
+                <div id="contas-vencidas-lista">
+                    <p class="text-muted">Carregando...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card card-hover">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-star me-2"></i>
+                    Senhas Favoritas
+                </h5>
+            </div>
+            <div class="card-body">
+                <div id="senhas-favoritas-lista">
+                    <p class="text-muted">Carregando...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Gráfico de Despesas -->
+<div class="row">
+    <div class="col-12">
+        <div class="card card-hover">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-line me-2"></i>
+                    Resumo Financeiro
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="grafico-despesas" width="400" height="100"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+$(document).ready(function() {
+    carregarDashboard();
+});
+
+// Função para formatar valores em moeda brasileira
+function formatarMoeda(valor) {
+    return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+    }).format(valor);
+}
+
+function carregarDashboard() {
+    // Carregar status de vencimentos
+    carregarStatusVencimentos();
+    
+    // Carregar estatísticas
+    carregarEstatisticas();
+    
+    // Carregar contas vencidas
+    carregarContasVencidas();
+    
+    // Carregar senhas favoritas
+    carregarSenhasFavoritas();
+    
+    // Carregar gráfico
+    carregarGraficoDespesas();
+}
+
+function carregarStatusVencimentos() {
+    // Carregar contas vencidas
+    fetch('/api/contas/contas-pagar/vencidas/')
+        .then(response => response.json())
+        .then(data => {
+            $('#contas-vencidas').text(formatarMoeda(data.total || 0));
+            $('#quantidade-vencidas').text(`${data.quantidade} conta${data.quantidade !== 1 ? 's' : ''}`);
+        })
+        .catch(error => {
+            console.error('Erro ao carregar contas vencidas:', error);
+            $('#contas-vencidas').text('R$ 0,00');
+            $('#quantidade-vencidas').text('0 contas');
+        });
+    
+    // Carregar contas de hoje
+    fetch('/api/contas/contas-pagar/hoje/')
+        .then(response => response.json())
+        .then(data => {
+            $('#contas-hoje').text(formatarMoeda(data.total || 0));
+            $('#quantidade-hoje').text(`${data.quantidade} conta${data.quantidade !== 1 ? 's' : ''}`);
+        })
+        .catch(error => {
+            console.error('Erro ao carregar contas de hoje:', error);
+            $('#contas-hoje').text('R$ 0,00');
+            $('#quantidade-hoje').text('0 contas');
+        });
+    
+    // Carregar contas de amanhã
+    fetch('/api/contas/contas-pagar/amanha/')
+        .then(response => response.json())
+        .then(data => {
+            $('#contas-amanha').text(formatarMoeda(data.total || 0));
+            $('#quantidade-amanha').text(`${data.quantidade} conta${data.quantidade !== 1 ? 's' : ''}`);
+        })
+        .catch(error => {
+            console.error('Erro ao carregar contas de amanhã:', error);
+            $('#contas-amanha').text('R$ 0,00');
+            $('#quantidade-amanha').text('0 contas');
+        });
+}
+
+function carregarEstatisticas() {
+    // Carregar contas pendentes
+    fetch('/api/contas/contas-pagar/pendentes/')
+        .then(response => response.json())
+        .then(data => {
+            $('#contas-pendentes').text(data.length);
+        })
+        .catch(error => {
+            console.error('Erro ao carregar contas pendentes:', error);
+            $('#contas-pendentes').text('0');
+        });
+    
+    // Carregar despesas do mês
+    fetch('/api/contas/despesas/resumo_mensal/')
+        .then(response => response.json())
+        .then(data => {
+            $('#despesas-mes').text(formatarMoeda(data.total_mes || 0));
+        })
+        .catch(error => {
+            console.error('Erro ao carregar despesas do mês:', error);
+            $('#despesas-mes').text('R$ 0,00');
+        });
+    
+    // Carregar dados reais de senhas
+    fetch('/api/senhas/senhas/')
+        .then(response => response.json())
+        .then(data => {
+            $('#senhas-total').text(data.length || '0');
+        })
+        .catch(error => {
+            console.error('Erro ao carregar senhas:', error);
+            $('#senhas-total').text('0');
+        });
+    
+    // Simular dados para notas fiscais (ainda não implementado)
+    $('#notas-total').text('8');
+}
+
+function carregarContasVencidas() {
+    fetch('/api/contas/contas-pagar/vencidas/')
+        .then(response => response.json())
+        .then(data => {
+            if (data.length === 0) {
+                $('#contas-vencidas-lista').html('<p class="text-success">Nenhuma conta vencida!</p>');
+            } else {
+                let html = '<div class="list-group list-group-flush">';
+                data.forEach(conta => {
+                    html += `
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>${conta.descricao}</strong><br>
+                                <small class="text-muted">Vencimento: ${new Date(conta.data_vencimento).toLocaleDateString('pt-BR')}</small>
+                            </div>
+                            <span class="badge bg-danger">${formatarMoeda(conta.valor)}</span>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+                $('#contas-vencidas-lista').html(html);
+            }
+        })
+        .catch(error => {
+            console.error('Erro ao carregar contas vencidas:', error);
+            $('#contas-vencidas-lista').html('<p class="text-muted">Erro ao carregar dados</p>');
+        });
+}
+
+function carregarSenhasFavoritas() {
+    fetch('/api/senhas/senhas/favoritos/')
+        .then(response => response.json())
+        .then(data => {
+            if (data.length === 0) {
+                $('#senhas-favoritas-lista').html('<p class="text-muted">Nenhuma senha favorita</p>');
+            } else {
+                let html = '<div class="list-group list-group-flush">';
+                data.slice(0, 5).forEach(senha => {
+                    html += `
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>${senha.titulo}</strong><br>
+                                <small class="text-muted">${senha.usuario || 'N/A'}</small>
+                            </div>
+                                <i class="fas fa-star text-warning"></i>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+                $('#senhas-favoritas-lista').html(html);
+            }
+        })
+        .catch(error => {
+            console.error('Erro ao carregar senhas favoritas:', error);
+            $('#senhas-favoritas-lista').html('<p class="text-muted">Erro ao carregar dados</p>');
+        });
+}
+
+function carregarGraficoDespesas() {
+    const ctx = document.getElementById('grafico-despesas').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'],
+            datasets: [{
+                label: 'Despesas (R$)',
+                data: [1200, 1900, 3000, 2500, 2200, 2450],
+                borderColor: 'rgb(75, 192, 192)',
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return formatarMoeda(value);
+                        }
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return formatarMoeda(context.parsed.y);
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+</script>
+{% endblock %}
+

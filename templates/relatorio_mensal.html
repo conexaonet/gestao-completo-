@@ -1,0 +1,396 @@
+{% extends 'dev_base.html' %}
+{% load static %}
+
+{% block title %}Relatório Mensal - Gestão Empresarial{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-chart-bar me-2"></i>
+                Relatório Mensal
+            </h1>
+            <div class="d-flex gap-2">
+                <select class="form-select" id="select-mes" style="width: auto;">
+                    <option value="1">Janeiro</option>
+                    <option value="2">Fevereiro</option>
+                    <option value="3">Março</option>
+                    <option value="4">Abril</option>
+                    <option value="5">Maio</option>
+                    <option value="6">Junho</option>
+                    <option value="7">Julho</option>
+                    <option value="8">Agosto</option>
+                    <option value="9">Setembro</option>
+                    <option value="10">Outubro</option>
+                    <option value="11">Novembro</option>
+                    <option value="12">Dezembro</option>
+                </select>
+                <select class="form-select" id="select-ano" style="width: auto;">
+                    <option value="2024">2024</option>
+                    <option value="2025">2025</option>
+                    <option value="2026">2026</option>
+                </select>
+                <button class="btn btn-primary" onclick="carregarRelatorio()">
+                    <i class="fas fa-search me-1"></i>Buscar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cards de Resumo -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card stats-card warning card-hover">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-1">Contas Pendentes</h6>
+                        <h3 class="mb-0" id="contas-pendentes">R$ 0,00</h3>
+                    </div>
+                    <div class="text-end">
+                        <i class="fas fa-clock fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card success card-hover">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-1">Contas Pagas</h6>
+                        <h3 class="mb-0" id="contas-pagas">R$ 0,00</h3>
+                    </div>
+                    <div class="text-end">
+                        <i class="fas fa-check-circle fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card danger card-hover">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-1">Despesas</h6>
+                        <h3 class="mb-0" id="total-despesas">R$ 0,00</h3>
+                    </div>
+                    <div class="text-end">
+                        <i class="fas fa-receipt fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card info card-hover">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-1">Saldo</h6>
+                        <h3 class="mb-0" id="saldo">R$ 0,00</h3>
+                    </div>
+                    <div class="text-end">
+                        <i class="fas fa-balance-scale fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Gráficos -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card card-hover">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-pie me-2"></i>
+                    Contas por Categoria
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="grafico-contas" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card card-hover">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-pie me-2"></i>
+                    Despesas por Categoria
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="grafico-despesas" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tabelas Detalhadas -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="card card-hover">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-list me-2"></i>
+                    Contas Pendentes
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Descrição</th>
+                                <th>Valor</th>
+                                <th>Vencimento</th>
+                                <th>Categoria</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabela-contas-pendentes">
+                            <tr>
+                                <td colspan="4" class="text-center text-muted">Carregando...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card card-hover">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-list me-2"></i>
+                    Despesas do Mês
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Descrição</th>
+                                <th>Valor</th>
+                                <th>Data</th>
+                                <th>Categoria</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabela-despesas">
+                            <tr>
+                                <td colspan="4" class="text-center text-muted">Carregando...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+let graficoContas = null;
+let graficoDespesas = null;
+
+$(document).ready(function() {
+    // Definir mês e ano atual
+    const hoje = new Date();
+    $('#select-mes').val(hoje.getMonth() + 1);
+    $('#select-ano').val(hoje.getFullYear());
+    
+    carregarRelatorio();
+});
+
+function formatarMoeda(valor) {
+    return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+    }).format(valor);
+}
+
+function carregarRelatorio() {
+    const mes = $('#select-mes').val();
+    const ano = $('#select-ano').val();
+    
+    fetch(`/api/contas/relatorios/mensal/?mes=${mes}&ano=${ano}`)
+        .then(response => response.json())
+        .then(data => {
+            atualizarCards(data.resumo);
+            atualizarGraficos(data);
+            atualizarTabelas(data);
+        })
+        .catch(error => {
+            console.error('Erro ao carregar relatório:', error);
+            mostrarNotificacao('Erro ao carregar relatório', 'error');
+        });
+}
+
+function atualizarCards(resumo) {
+    $('#contas-pendentes').text(formatarMoeda(resumo.contas_pendentes));
+    $('#contas-pagas').text(formatarMoeda(resumo.contas_pagas));
+    $('#total-despesas').text(formatarMoeda(resumo.despesas));
+    $('#saldo').text(formatarMoeda(resumo.saldo));
+    
+    // Mudar cor do saldo baseado no valor
+    const saldoElement = $('#saldo');
+    if (resumo.saldo > 0) {
+        saldoElement.removeClass('text-danger').addClass('text-success');
+    } else if (resumo.saldo < 0) {
+        saldoElement.removeClass('text-success').addClass('text-danger');
+    } else {
+        saldoElement.removeClass('text-success text-danger');
+    }
+}
+
+function atualizarGraficos(data) {
+    // Gráfico de Contas por Categoria
+    const ctxContas = document.getElementById('grafico-contas').getContext('2d');
+    if (graficoContas) {
+        graficoContas.destroy();
+    }
+    
+    const dadosContas = data.contas_por_categoria.map(cat => ({
+        label: cat.nome,
+        data: [cat.pendente, cat.pago],
+        backgroundColor: [cat.cor + '80', cat.cor],
+        borderColor: [cat.cor, cat.cor],
+        borderWidth: 1
+    }));
+    
+    graficoContas = new Chart(ctxContas, {
+        type: 'doughnut',
+        data: {
+            labels: ['Pendente', 'Pago'],
+            datasets: dadosContas
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.label + ': ' + formatarMoeda(context.parsed);
+                        }
+                    }
+                }
+            }
+        }
+    });
+    
+    // Gráfico de Despesas por Categoria
+    const ctxDespesas = document.getElementById('grafico-despesas').getContext('2d');
+    if (graficoDespesas) {
+        graficoDespesas.destroy();
+    }
+    
+    const dadosDespesas = {
+        labels: data.despesas_por_categoria.map(cat => cat.nome),
+        datasets: [{
+            data: data.despesas_por_categoria.map(cat => cat.total),
+            backgroundColor: data.despesas_por_categoria.map(cat => cat.cor),
+            borderColor: data.despesas_por_categoria.map(cat => cat.cor),
+            borderWidth: 1
+        }]
+    };
+    
+    graficoDespesas = new Chart(ctxDespesas, {
+        type: 'doughnut',
+        data: dadosDespesas,
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.label + ': ' + formatarMoeda(context.parsed);
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function atualizarTabelas(data) {
+    // Tabela de Contas Pendentes
+    let htmlContas = '';
+    if (data.contas_pendentes_detalhadas.length === 0) {
+        htmlContas = '<tr><td colspan="4" class="text-center text-muted">Nenhuma conta pendente</td></tr>';
+    } else {
+        data.contas_pendentes_detalhadas.forEach(conta => {
+            htmlContas += `
+                <tr>
+                    <td>${conta.descricao}</td>
+                    <td><strong>${formatarMoeda(conta.valor)}</strong></td>
+                    <td>${new Date(conta.data_vencimento).toLocaleDateString('pt-BR')}</td>
+                    <td>
+                        <span class="badge" style="background-color: ${conta.categoria_cor}">
+                            ${conta.categoria_nome}
+                        </span>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+    $('#tabela-contas-pendentes').html(htmlContas);
+    
+    // Tabela de Despesas
+    let htmlDespesas = '';
+    if (data.despesas_detalhadas.length === 0) {
+        htmlDespesas = '<tr><td colspan="4" class="text-center text-muted">Nenhuma despesa registrada</td></tr>';
+    } else {
+        data.despesas_detalhadas.forEach(despesa => {
+            htmlDespesas += `
+                <tr>
+                    <td>${despesa.descricao}</td>
+                    <td><strong>${formatarMoeda(despesa.valor)}</strong></td>
+                    <td>${new Date(despesa.data).toLocaleDateString('pt-BR')}</td>
+                    <td>
+                        <span class="badge" style="background-color: ${despesa.categoria_cor}">
+                            ${despesa.categoria_nome}
+                        </span>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+    $('#tabela-despesas').html(htmlDespesas);
+}
+
+function mostrarNotificacao(mensagem, tipo) {
+    const alertClass = tipo === 'success' ? 'alert-success' : 'alert-danger';
+    const icon = tipo === 'success' ? 'fas fa-check' : 'fas fa-exclamation-triangle';
+    
+    const alert = `
+        <div class="alert ${alertClass} alert-dismissible fade show position-fixed" 
+             style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;">
+            <i class="${icon} me-2"></i>
+            ${mensagem}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    $('body').append(alert);
+    
+    setTimeout(() => {
+        $('.alert').fadeOut();
+    }, 5000);
+}
+</script>
+{% endblock %} 

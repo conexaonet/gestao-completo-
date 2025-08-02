@@ -1,0 +1,613 @@
+{% extends 'dev_base.html' %}
+{% load static %}
+
+{% block title %}Fornecedores - Gestão Empresarial{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-building me-2"></i>
+                Fornecedores
+            </h1>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalFornecedor">
+                <i class="fas fa-plus me-2"></i>
+                Novo Fornecedor
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Cards de Estatísticas -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card card-hover bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Total</h6>
+                        <h3 id="total-fornecedores">0</h3>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-building fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card card-hover bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Ativos</h6>
+                        <h3 id="fornecedores-ativos">0</h3>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-check-circle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card card-hover bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Favoritos</h6>
+                        <h3 id="fornecedores-favoritos">0</h3>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-star fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card card-hover bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">PJ</h6>
+                        <h3 id="pessoa-juridica">0</h3>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-industry fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filtros -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card card-hover">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-filter me-2"></i>
+                    Filtros
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <label class="form-label">Buscar</label>
+                        <input type="text" class="form-control" id="buscar-fornecedor" placeholder="Nome, CNPJ/CPF, cidade...">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Tipo</label>
+                        <select class="form-select" id="filtro-tipo">
+                            <option value="">Todos</option>
+                            <option value="pf">Pessoa Física</option>
+                            <option value="pj">Pessoa Jurídica</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Status</label>
+                        <select class="form-select" id="filtro-status">
+                            <option value="">Todos</option>
+                            <option value="ativo">Ativo</option>
+                            <option value="inativo">Inativo</option>
+                            <option value="suspenso">Suspenso</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Favoritos</label>
+                        <select class="form-select" id="filtro-favorito">
+                            <option value="">Todos</option>
+                            <option value="true">Apenas Favoritos</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">&nbsp;</label>
+                        <button class="btn btn-outline-secondary w-100" onclick="limparFiltros()">
+                            <i class="fas fa-times me-1"></i>Limpar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Lista de Fornecedores -->
+<div class="row">
+    <div class="col-12">
+        <div class="card card-hover">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-list me-2"></i>
+                    Meus Fornecedores
+                </h5>
+            </div>
+            <div class="card-body">
+                <div id="lista-fornecedores">
+                    <div class="text-center">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Carregando...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Novo Fornecedor -->
+<div class="modal fade" id="modalFornecedor" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-plus me-2"></i>
+                    Novo Fornecedor
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="form-fornecedor">
+                    <!-- Informações Básicas -->
+                    <div class="row">
+                        <div class="col-md-8">
+                            <label class="form-label">Nome/Razão Social *</label>
+                            <input type="text" class="form-control" name="nome" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Tipo *</label>
+                            <select class="form-select" name="tipo" required>
+                                <option value="">Selecione</option>
+                                <option value="pf">Pessoa Física</option>
+                                <option value="pj">Pessoa Jurídica</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <label class="form-label">CNPJ/CPF *</label>
+                            <input type="text" class="form-control" name="cnpj_cpf" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Ramo de Atividade</label>
+                            <input type="text" class="form-control" name="ramo_atividade">
+                        </div>
+                    </div>
+                    
+                    <!-- Contato -->
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <label class="form-label">E-mail</label>
+                            <input type="email" class="form-control" name="email">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Telefone</label>
+                            <input type="text" class="form-control" name="telefone">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Celular</label>
+                            <input type="text" class="form-control" name="celular">
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <label class="form-label">Website</label>
+                            <input type="url" class="form-control" name="website" placeholder="https://exemplo.com">
+                        </div>
+                    </div>
+                    
+                    <!-- Endereço -->
+                    <div class="row mt-3">
+                        <div class="col-md-3">
+                            <label class="form-label">CEP</label>
+                            <input type="text" class="form-control" name="cep">
+                        </div>
+                        <div class="col-md-7">
+                            <label class="form-label">Endereço</label>
+                            <input type="text" class="form-control" name="endereco">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Número</label>
+                            <input type="text" class="form-control" name="numero">
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Complemento</label>
+                            <input type="text" class="form-control" name="complemento">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Bairro</label>
+                            <input type="text" class="form-control" name="bairro">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Cidade</label>
+                            <input type="text" class="form-control" name="cidade">
+                        </div>
+                        <div class="col-md-1">
+                            <label class="form-label">UF</label>
+                            <input type="text" class="form-control" name="estado" maxlength="2">
+                        </div>
+                    </div>
+                    
+                    <!-- Informações Comerciais -->
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Inscrição Estadual</label>
+                            <input type="text" class="form-control" name="inscricao_estadual">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Inscrição Municipal</label>
+                            <input type="text" class="form-control" name="inscricao_municipal">
+                        </div>
+                    </div>
+                    
+                    <!-- Informações Bancárias -->
+                    <div class="row mt-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Banco</label>
+                            <input type="text" class="form-control" name="banco">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Agência</label>
+                            <input type="text" class="form-control" name="agencia">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Conta</label>
+                            <input type="text" class="form-control" name="conta">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Tipo</label>
+                            <select class="form-select" name="tipo_conta">
+                                <option value="">Selecione</option>
+                                <option value="corrente">Corrente</option>
+                                <option value="poupanca">Poupança</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Controle -->
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Status</label>
+                            <select class="form-select" name="status">
+                                <option value="ativo">Ativo</option>
+                                <option value="inativo">Inativo</option>
+                                <option value="suspenso">Suspenso</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check mt-4">
+                                <input class="form-check-input" type="checkbox" name="favorito" id="favorito">
+                                <label class="form-check-label" for="favorito">
+                                    Marcar como favorito
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <label class="form-label">Observações</label>
+                            <textarea class="form-control" name="observacoes" rows="3"></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>Cancelar
+                </button>
+                <button type="button" class="btn btn-primary" onclick="salvarFornecedor()">
+                    <i class="fas fa-save me-1"></i>Salvar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    carregarFornecedores();
+    carregarEstatisticas();
+    
+    // Filtros
+    $('#buscar-fornecedor').on('input', function() {
+        carregarFornecedores();
+    });
+    
+    $('#filtro-tipo, #filtro-status, #filtro-favorito').change(function() {
+        carregarFornecedores();
+    });
+});
+
+function carregarFornecedores() {
+    const busca = $('#buscar-fornecedor').val();
+    const tipo = $('#filtro-tipo').val();
+    const status = $('#filtro-status').val();
+    const favorito = $('#filtro-favorito').val();
+    
+    let url = '/api/fornecedores/fornecedores/';
+    const params = new URLSearchParams();
+    
+    if (busca) {
+        params.append('q', busca);
+    }
+    
+    if (params.toString()) {
+        url += '?' + params.toString();
+    }
+    
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            // Filtrar por tipo, status e favorito
+            let fornecedores = data;
+            
+            if (tipo) {
+                fornecedores = fornecedores.filter(f => f.tipo === tipo);
+            }
+            
+            if (status) {
+                fornecedores = fornecedores.filter(f => f.status === status);
+            }
+            
+            if (favorito === 'true') {
+                fornecedores = fornecedores.filter(f => f.favorito === true);
+            }
+            
+            let html = '';
+            
+            if (fornecedores.length === 0) {
+                html = `
+                    <div class="text-center py-5">
+                        <i class="fas fa-building fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">Nenhum fornecedor encontrado</h5>
+                        <p class="text-muted">Clique em "Novo Fornecedor" para adicionar seu primeiro fornecedor</p>
+                    </div>
+                `;
+            } else {
+                fornecedores.forEach(fornecedor => {
+                    html += `
+                        <div class="card mb-3 card-hover">
+                            <div class="card-body">
+                                <div class="row align-items-center">
+                                    <div class="col-md-8">
+                                        <h5 class="card-title mb-1">
+                                            ${fornecedor.nome}
+                                            ${fornecedor.favorito ? '<i class="fas fa-star text-warning ms-2"></i>' : ''}
+                                            <span class="badge bg-${fornecedor.status === 'ativo' ? 'success' : fornecedor.status === 'inativo' ? 'secondary' : 'warning'} ms-2">
+                                                ${fornecedor.status}
+                                            </span>
+                                        </h5>
+                                        <p class="card-text mb-1">
+                                            <strong>${fornecedor.tipo === 'pf' ? 'CPF' : 'CNPJ'}:</strong> ${fornecedor.cnpj_cpf}
+                                        </p>
+                                        ${fornecedor.email ? `<p class="card-text mb-1"><strong>E-mail:</strong> ${fornecedor.email}</p>` : ''}
+                                        ${fornecedor.telefone ? `<p class="card-text mb-1"><strong>Telefone:</strong> ${fornecedor.telefone}</p>` : ''}
+                                        ${fornecedor.cidade ? `<p class="card-text mb-0"><strong>Cidade:</strong> ${fornecedor.cidade} - ${fornecedor.estado}</p>` : ''}
+                                    </div>
+                                    <div class="col-md-4 text-end">
+                                        <div class="btn-group">
+                                            <button class="btn btn-outline-info btn-sm" onclick="verDetalhes(${fornecedor.id})" title="Ver Detalhes">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button class="btn btn-outline-warning btn-sm" onclick="toggleFavorito(${fornecedor.id})" title="Favoritar">
+                                                <i class="fas fa-star"></i>
+                                            </button>
+                                            <button class="btn btn-outline-primary btn-sm" onclick="editarFornecedor(${fornecedor.id})" title="Editar">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-outline-danger btn-sm" onclick="excluirFornecedor(${fornecedor.id})" title="Excluir">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                        <div class="mt-2">
+                                            <small class="text-muted">
+                                                ${fornecedor.contas_count} contas | R$ ${fornecedor.total_contas.toLocaleString('pt-BR', {minimumFractionDigits: 2})}
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            
+            $('#lista-fornecedores').html(html);
+        })
+        .catch(error => {
+            console.error('Erro ao carregar fornecedores:', error);
+            $('#lista-fornecedores').html(`
+                <div class="text-center text-danger">
+                    <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+                    <p>Erro ao carregar fornecedores</p>
+                </div>
+            `);
+        });
+}
+
+function carregarEstatisticas() {
+    fetch('/api/fornecedores/fornecedores/estatisticas/')
+        .then(response => response.json())
+        .then(data => {
+            $('#total-fornecedores').text(data.resumo.total_fornecedores);
+            $('#fornecedores-ativos').text(data.resumo.fornecedores_ativos);
+            $('#fornecedores-favoritos').text(data.resumo.fornecedores_favoritos);
+            $('#pessoa-juridica').text(data.resumo.pessoa_juridica);
+        })
+        .catch(error => {
+            console.error('Erro ao carregar estatísticas:', error);
+        });
+}
+
+function salvarFornecedor() {
+    const form = document.getElementById('form-fornecedor');
+    const formData = new FormData(form);
+    
+    // Converter dados do formulário para JSON
+    const data = {};
+    formData.forEach((value, key) => {
+        if (key === 'favorito') {
+            data[key] = value === 'on';
+        } else {
+            data[key] = value;
+        }
+    });
+    
+    fetch('/api/fornecedores/fornecedores/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.id) {
+            mostrarNotificacao('Fornecedor salvo com sucesso!', 'success');
+            $('#modalFornecedor').modal('hide');
+            form.reset();
+            carregarFornecedores();
+            carregarEstatisticas();
+        } else {
+            mostrarNotificacao('Erro ao salvar fornecedor: ' + JSON.stringify(data), 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        mostrarNotificacao('Erro ao salvar fornecedor', 'error');
+    });
+}
+
+function verDetalhes(id) {
+    // Implementar visualização de detalhes
+    mostrarNotificacao('Funcionalidade de detalhes será implementada em breve', 'info');
+}
+
+function toggleFavorito(id) {
+    fetch(`/api/fornecedores/fornecedores/${id}/toggle_favorito/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        mostrarNotificacao('Status de favorito atualizado!', 'success');
+        carregarFornecedores();
+        carregarEstatisticas();
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        mostrarNotificacao('Erro ao atualizar favorito', 'error');
+    });
+}
+
+function editarFornecedor(id) {
+    // Implementar edição
+    mostrarNotificacao('Funcionalidade de edição será implementada em breve', 'info');
+}
+
+function excluirFornecedor(id) {
+    if (confirm('Tem certeza que deseja excluir este fornecedor?')) {
+        fetch(`/api/fornecedores/fornecedores/${id}/`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                mostrarNotificacao('Fornecedor excluído!', 'success');
+                carregarFornecedores();
+                carregarEstatisticas();
+            } else {
+                mostrarNotificacao('Erro ao excluir fornecedor', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            mostrarNotificacao('Erro ao excluir fornecedor', 'error');
+        });
+    }
+}
+
+function limparFiltros() {
+    $('#buscar-fornecedor').val('');
+    $('#filtro-tipo').val('');
+    $('#filtro-status').val('');
+    $('#filtro-favorito').val('');
+    carregarFornecedores();
+}
+
+function mostrarNotificacao(mensagem, tipo) {
+    const alertClass = tipo === 'success' ? 'alert-success' : 
+                      tipo === 'error' ? 'alert-danger' : 
+                      tipo === 'info' ? 'alert-info' : 'alert-warning';
+    const icon = tipo === 'success' ? 'fas fa-check' : 
+                tipo === 'error' ? 'fas fa-exclamation-triangle' : 
+                tipo === 'info' ? 'fas fa-info-circle' : 'fas fa-exclamation-triangle';
+    
+    const alert = `
+        <div class="alert ${alertClass} alert-dismissible fade show position-fixed" 
+             style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;">
+            <i class="${icon} me-2"></i>
+            ${mensagem}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    $('body').append(alert);
+    
+    setTimeout(() => {
+        $('.alert').fadeOut();
+    }, 5000);
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %} 

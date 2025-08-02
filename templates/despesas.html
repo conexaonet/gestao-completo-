@@ -1,0 +1,552 @@
+{% extends 'dev_base.html' %}
+{% load static %}
+
+{% block title %}Despesas - Gestão Empresarial{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-receipt me-2"></i>
+                Despesas Diárias
+            </h1>
+            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalDespesa">
+                <i class="fas fa-plus me-2"></i>
+                Nova Despesa
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Cards de Resumo -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card stats-card success card-hover">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-1">
+                            <i class="fas fa-chart-line me-2"></i>
+                            Total do Mês
+                        </h6>
+                        <h2 class="mb-0" id="total-mes">R$ 0,00</h2>
+                    </div>
+                    <div class="text-end">
+                        <i class="fas fa-chart-line fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stats-card info card-hover">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-1">
+                            <i class="fas fa-list me-2"></i>
+                            Quantidade
+                        </h6>
+                        <h2 class="mb-0" id="quantidade-despesas">0</h2>
+                    </div>
+                    <div class="text-end">
+                        <i class="fas fa-list fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stats-card warning card-hover">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-1">
+                            <i class="fas fa-calculator me-2"></i>
+                            Média Diária
+                        </h6>
+                        <h2 class="mb-0" id="media-diaria">R$ 0,00</h2>
+                    </div>
+                    <div class="text-end">
+                        <i class="fas fa-calculator fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filtros -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card card-hover">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-filter me-2"></i>
+                    Filtros
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <label class="form-label">Data Inicial</label>
+                        <input type="date" class="form-control" id="data-inicial">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Data Final</label>
+                        <input type="date" class="form-control" id="data-final">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Categoria</label>
+                        <select class="form-select" id="filtro-categoria">
+                            <option value="">Todas</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">&nbsp;</label>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-primary flex-fill" onclick="aplicarFiltros()">
+                                <i class="fas fa-search me-1"></i>Filtrar
+                            </button>
+                            <button class="btn btn-outline-secondary" onclick="limparFiltros()">
+                                <i class="fas fa-times me-1"></i>Limpar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Lista de Despesas -->
+<div class="row">
+    <div class="col-12">
+        <div class="card card-hover">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-table me-2"></i>
+                    Lista de Despesas
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Descrição</th>
+                                <th>Valor</th>
+                                <th>Data</th>
+                                <th>Categoria</th>
+                                <th>Observações</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabela-despesas">
+                            <tr>
+                                <td colspan="6" class="text-center">
+                                    <div class="spinner-border" role="status">
+                                        <span class="visually-hidden">Carregando...</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Nova Despesa -->
+<div class="modal fade" id="modalDespesa" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-plus me-2"></i>
+                    Nova Despesa
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="form-despesa">
+                    <div class="mb-3">
+                        <label class="form-label">Descrição *</label>
+                        <input type="text" class="form-control" name="descricao" required>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Valor *</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">R$</span>
+                                    <input type="text" class="form-control" name="valor" placeholder="0,00" required>
+                                </div>
+                                <small class="form-text text-muted">Digite apenas números (ex: 1000,50)</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Data *</label>
+                                <input type="date" class="form-control" name="data" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Categoria *</label>
+                                <select class="form-select" name="categoria_id" required>
+                                    <option value="">Selecione...</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Buscar</label>
+                                <input type="text" class="form-control" id="buscar-despesa" placeholder="Buscar por descrição...">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Observações</label>
+                        <textarea class="form-control" name="observacoes" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>Cancelar
+                </button>
+                <button type="button" class="btn btn-success" onclick="salvarDespesa()">
+                    <i class="fas fa-save me-1"></i>Salvar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    carregarCategorias();
+    carregarDespesas();
+    carregarResumo();
+    
+    // Definir data atual como padrão
+    const hoje = new Date().toISOString().split('T')[0];
+    $('#data-inicial').val(hoje);
+    $('#data-final').val(hoje);
+    
+    // Filtros
+    $('#data-inicial, #data-final, #filtro-categoria').change(function() {
+        aplicarFiltros();
+    });
+    
+    $('#buscar-despesa').on('input', function() {
+        aplicarFiltros();
+    });
+    
+    // Formatação automática de valores monetários
+    $('input[name="valor"]').on('input', function() {
+        formatarCampoValor($(this));
+    });
+});
+
+// Função para formatar valores em moeda brasileira
+function formatarMoeda(valor) {
+    return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+    }).format(valor);
+}
+
+// Função para formatar campo de valor enquanto digita
+function formatarCampoValor(campo) {
+    let valor = campo.val().replace(/[^\d,]/g, ''); // Remove tudo exceto números e vírgula
+    
+    // Se não tem vírgula, adiciona automaticamente após 2 dígitos
+    if (!valor.includes(',')) {
+        if (valor.length > 2) {
+            valor = valor.slice(0, -2) + ',' + valor.slice(-2);
+        }
+    }
+    
+    // Formata o valor
+    if (valor) {
+        // Remove vírgulas existentes para contar
+        let numero = valor.replace(/,/g, '');
+        
+        // Se tem mais de 2 dígitos, adiciona vírgula decimal
+        if (numero.length > 2) {
+            numero = numero.slice(0, -2) + ',' + numero.slice(-2);
+        }
+        
+        // Adiciona pontos para milhares
+        let partes = numero.split(',');
+        partes[0] = partes[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        
+        valor = partes.join(',');
+    }
+    
+    campo.val(valor);
+}
+
+// Função para converter valor formatado para número
+function converterValorFormatado(valorFormatado) {
+    if (!valorFormatado) return 0;
+    
+    // Remove pontos e substitui vírgula por ponto
+    let valor = valorFormatado.replace(/\./g, '').replace(',', '.');
+    return parseFloat(valor) || 0;
+}
+
+function carregarCategorias() {
+    fetch('/api/contas/categorias/')
+        .then(response => response.json())
+        .then(data => {
+            const selectCategorias = $('select[name="categoria_id"], #filtro-categoria');
+            selectCategorias.each(function() {
+                const isFilter = $(this).attr('id') === 'filtro-categoria';
+                if (!isFilter) {
+                    $(this).html('<option value="">Selecione...</option>');
+                } else {
+                    $(this).html('<option value="">Todas</option>');
+                }
+                
+                data.forEach(cat => {
+                    $(this).append(`<option value="${cat.id}">${cat.nome}</option>`);
+                });
+            });
+        })
+        .catch(error => {
+            console.error('Erro ao carregar categorias:', error);
+        });
+}
+
+function carregarDespesas() {
+    const dataInicial = $('#data-inicial').val();
+    const dataFinal = $('#data-final').val();
+    const categoria = $('#filtro-categoria').val();
+    const busca = $('#buscar-despesa').val();
+    
+    let url = '/api/contas/despesas/';
+    const params = new URLSearchParams();
+    
+    if (dataInicial) params.append('data_inicial', dataInicial);
+    if (dataFinal) params.append('data_final', dataFinal);
+    if (categoria) params.append('categoria', categoria);
+    if (busca) params.append('search', busca);
+    
+    if (params.toString()) {
+        url += '?' + params.toString();
+    }
+    
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            let html = '';
+            
+            if (data.length === 0) {
+                html = '<tr><td colspan="6" class="text-center">Nenhuma despesa encontrada</td></tr>';
+            } else {
+                data.forEach(despesa => {
+                    html += `
+                        <tr>
+                            <td>
+                                <strong>${despesa.descricao}</strong>
+                            </td>
+                            <td>
+                                <span class="text-danger fw-bold">
+                                    ${formatarMoeda(despesa.valor)}
+                                </span>
+                            </td>
+                            <td>
+                                <i class="fas fa-calendar me-1"></i>
+                                ${new Date(despesa.data).toLocaleDateString('pt-BR')}
+                            </td>
+                            <td>
+                                <span class="badge" style="background-color: ${despesa.categoria_cor}">
+                                    ${despesa.categoria_nome}
+                                </span>
+                            </td>
+                            <td>
+                                <small class="text-muted">${despesa.observacoes || '-'}</small>
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-primary" onclick="editarDespesa(${despesa.id})" title="Editar">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-outline-danger" onclick="excluirDespesa(${despesa.id})" title="Excluir">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+            
+            $('#tabela-despesas').html(html);
+        })
+        .catch(error => {
+            console.error('Erro ao carregar despesas:', error);
+            $('#tabela-despesas').html('<tr><td colspan="6" class="text-center text-danger">Erro ao carregar dados</td></tr>');
+        });
+}
+
+function carregarResumo() {
+    const dataInicial = $('#data-inicial').val();
+    const dataFinal = $('#data-final').val();
+    
+    let url = '/api/contas/despesas/resumo_mensal/';
+    const params = new URLSearchParams();
+    
+    if (dataInicial) params.append('data_inicial', dataInicial);
+    if (dataFinal) params.append('data_final', dataFinal);
+    
+    if (params.toString()) {
+        url += '?' + params.toString();
+    }
+    
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            $('#total-mes').text(formatarMoeda(data.total_mes || 0));
+            $('#quantidade-despesas').text(data.quantidade || 0);
+            $('#media-diaria').text(formatarMoeda(data.media_diaria || 0));
+        })
+        .catch(error => {
+            console.error('Erro ao carregar resumo:', error);
+            $('#total-mes').text('R$ 0,00');
+            $('#quantidade-despesas').text('0');
+            $('#media-diaria').text('R$ 0,00');
+        });
+}
+
+function aplicarFiltros() {
+    carregarDespesas();
+    carregarResumo();
+}
+
+function limparFiltros() {
+    const hoje = new Date().toISOString().split('T')[0];
+    $('#data-inicial').val(hoje);
+    $('#data-final').val(hoje);
+    $('#filtro-categoria').val('');
+    $('#buscar-despesa').val('');
+    aplicarFiltros();
+}
+
+function salvarDespesa() {
+    const form = document.getElementById('form-despesa');
+    const formData = new FormData(form);
+    
+    const data = {};
+    formData.forEach((value, key) => {
+        if (key === 'valor') {
+            data[key] = converterValorFormatado(value);
+        } else {
+            data[key] = value;
+        }
+    });
+    
+    fetch('/api/contas/despesas/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.id) {
+            mostrarNotificacao('Despesa salva com sucesso!', 'success');
+            $('#modalDespesa').modal('hide');
+            form.reset();
+            carregarDespesas();
+            carregarResumo();
+        } else {
+            mostrarNotificacao('Erro ao salvar despesa: ' + JSON.stringify(data), 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        mostrarNotificacao('Erro ao salvar despesa', 'error');
+    });
+}
+
+function editarDespesa(id) {
+    // Implementar edição de despesa
+    mostrarNotificacao('Funcionalidade de edição em desenvolvimento', 'info');
+}
+
+function excluirDespesa(id) {
+    if (confirm('Tem certeza que deseja excluir esta despesa?')) {
+        fetch(`/api/contas/despesas/${id}/`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                mostrarNotificacao('Despesa excluída!', 'success');
+                carregarDespesas();
+                carregarResumo();
+            } else {
+                mostrarNotificacao('Erro ao excluir despesa', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            mostrarNotificacao('Erro ao excluir despesa', 'error');
+        });
+    }
+}
+
+function mostrarNotificacao(mensagem, tipo) {
+    const alertClass = tipo === 'success' ? 'alert-success' : 
+                      tipo === 'error' ? 'alert-danger' : 'alert-info';
+    const icon = tipo === 'success' ? 'fas fa-check' : 
+                tipo === 'error' ? 'fas fa-exclamation-triangle' : 'fas fa-info-circle';
+    
+    const alert = `
+        <div class="alert ${alertClass} alert-dismissible fade show position-fixed" 
+             style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;">
+            <i class="${icon} me-2"></i>
+            ${mensagem}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    $('body').append(alert);
+    
+    // Remover alerta após 5 segundos
+    setTimeout(() => {
+        $('.alert').fadeOut();
+    }, 5000);
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %}
+

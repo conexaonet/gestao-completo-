@@ -1,0 +1,424 @@
+{% extends 'dev_base.html' %}
+{% load static %}
+
+{% block title %}Notas Fiscais - Gestão Empresarial{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-file-alt me-2"></i>
+                Notas Fiscais
+            </h1>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNota">
+                <i class="fas fa-plus me-2"></i>
+                Nova Nota Fiscal
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Resumo -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <h5 class="card-title">Entradas</h5>
+                <h2 class="mb-0" id="total-entradas">R$ 0,00</h2>
+                <small>Este mês</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-danger text-white">
+            <div class="card-body">
+                <h5 class="card-title">Saídas</h5>
+                <h2 class="mb-0" id="total-saidas">R$ 0,00</h2>
+                <small>Este mês</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <h5 class="card-title">Saldo</h5>
+                <h2 class="mb-0" id="saldo-mes">R$ 0,00</h2>
+                <small>Este mês</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <h5 class="card-title">Pendentes</h5>
+                <h2 class="mb-0" id="total-pendentes">0</h2>
+                <small>Notas</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filtros -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-2">
+                        <label class="form-label">Tipo</label>
+                        <select class="form-select" id="filtro-tipo">
+                            <option value="">Todos</option>
+                            <option value="entrada">Entrada</option>
+                            <option value="saida">Saída</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Status</label>
+                        <select class="form-select" id="filtro-status">
+                            <option value="">Todos</option>
+                            <option value="pendente">Pendente</option>
+                            <option value="processada">Processada</option>
+                            <option value="cancelada">Cancelada</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Data Inicial</label>
+                        <input type="date" class="form-control" id="data-inicial">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Data Final</label>
+                        <input type="date" class="form-control" id="data-final">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Buscar</label>
+                        <input type="text" class="form-control" id="buscar-nota" placeholder="Número, fornecedor...">
+                    </div>
+                    <div class="col-md-1">
+                        <label class="form-label">&nbsp;</label>
+                        <button class="btn btn-outline-secondary w-100" onclick="limparFiltros()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Lista de Notas -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Número/Série</th>
+                                <th>Tipo</th>
+                                <th>Data Emissão</th>
+                                <th>Fornecedor/Cliente</th>
+                                <th>Valor Total</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabela-notas">
+                            <tr>
+                                <td colspan="7" class="text-center">
+                                    <div class="spinner-border" role="status">
+                                        <span class="visually-hidden">Carregando...</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Nova Nota -->
+<div class="modal fade" id="modalNota" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nova Nota Fiscal</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="form-nota">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">Número *</label>
+                                <input type="text" class="form-control" name="numero" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">Série *</label>
+                                <input type="text" class="form-control" name="serie" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">Tipo *</label>
+                                <select class="form-select" name="tipo" required>
+                                    <option value="">Selecione...</option>
+                                    <option value="entrada">Entrada</option>
+                                    <option value="saida">Saída</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Data de Emissão *</label>
+                                <input type="date" class="form-control" name="data_emissao" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Data de Vencimento</label>
+                                <input type="date" class="form-control" name="data_vencimento">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Valor Total *</label>
+                                <input type="number" class="form-control" name="valor_total" step="0.01" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Valor dos Impostos</label>
+                                <input type="number" class="form-control" name="valor_impostos" step="0.01" value="0">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="mb-3">
+                                <label class="form-label">Fornecedor/Cliente *</label>
+                                <input type="text" class="form-control" name="fornecedor_cliente" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">CNPJ/CPF *</label>
+                                <input type="text" class="form-control" name="cnpj_cpf" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Descrição</label>
+                        <textarea class="form-control" name="descricao" rows="2"></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Observações</label>
+                        <textarea class="form-control" name="observacoes" rows="2"></textarea>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Status</label>
+                                <select class="form-select" name="status">
+                                    <option value="pendente">Pendente</option>
+                                    <option value="processada">Processada</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Arquivo</label>
+                                <input type="file" class="form-control" name="arquivo" accept=".pdf,.jpg,.jpeg,.png">
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="salvarNota()">Salvar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Definir datas padrão
+    const hoje = new Date();
+    const primeiroDia = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+    
+    $('#data-inicial').val(primeiroDia.toISOString().split('T')[0]);
+    $('#data-final').val(hoje.toISOString().split('T')[0]);
+    $('input[name="data_emissao"]').val(hoje.toISOString().split('T')[0]);
+    
+    carregarNotas();
+    carregarResumo();
+    
+    // Filtros
+    $('#filtro-tipo, #filtro-status, #data-inicial, #data-final').change(function() {
+        carregarNotas();
+        carregarResumo();
+    });
+    
+    $('#buscar-nota').on('input', function() {
+        carregarNotas();
+    });
+});
+
+function carregarNotas() {
+    // Simular dados
+    const notas = [
+        {
+            id: 1,
+            numero: '000001',
+            serie: '1',
+            tipo: 'entrada',
+            data_emissao: '2024-06-01',
+            fornecedor_cliente: 'Fornecedor ABC Ltda',
+            valor_total: 5000.00,
+            status: 'processada'
+        },
+        {
+            id: 2,
+            numero: '000002',
+            serie: '1',
+            tipo: 'saida',
+            data_emissao: '2024-06-05',
+            fornecedor_cliente: 'Cliente XYZ S.A.',
+            valor_total: 3500.00,
+            status: 'pendente'
+        },
+        {
+            id: 3,
+            numero: '000003',
+            serie: '1',
+            tipo: 'entrada',
+            data_emissao: '2024-06-08',
+            fornecedor_cliente: 'Fornecedor DEF Ltda',
+            valor_total: 2800.00,
+            status: 'processada'
+        }
+    ];
+    
+    let html = '';
+    notas.forEach(nota => {
+        const tipoClass = nota.tipo === 'entrada' ? 'success' : 'primary';
+        const statusClass = nota.status === 'pendente' ? 'warning' : 
+                           nota.status === 'processada' ? 'success' : 'danger';
+        
+        html += `
+            <tr>
+                <td>${nota.numero}/${nota.serie}</td>
+                <td><span class="badge bg-${tipoClass}">${nota.tipo.charAt(0).toUpperCase() + nota.tipo.slice(1)}</span></td>
+                <td>${new Date(nota.data_emissao).toLocaleDateString('pt-BR')}</td>
+                <td>${nota.fornecedor_cliente}</td>
+                <td>R$ ${nota.valor_total.toFixed(2).replace('.', ',')}</td>
+                <td><span class="badge bg-${statusClass}">${nota.status.charAt(0).toUpperCase() + nota.status.slice(1)}</span></td>
+                <td>
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-outline-info" onclick="verDetalhes(${nota.id})" title="Ver Detalhes">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="btn btn-outline-primary" onclick="editarNota(${nota.id})" title="Editar">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        ${nota.status === 'pendente' ? 
+                            `<button class="btn btn-outline-success" onclick="processarNota(${nota.id})" title="Processar">
+                                <i class="fas fa-check"></i>
+                            </button>` : ''
+                        }
+                        <button class="btn btn-outline-danger" onclick="excluirNota(${nota.id})" title="Excluir">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    });
+    
+    $('#tabela-notas').html(html);
+}
+
+function carregarResumo() {
+    // Simular dados
+    $('#total-entradas').text('R$ 7.800,00');
+    $('#total-saidas').text('R$ 3.500,00');
+    $('#saldo-mes').text('R$ 4.300,00');
+    $('#total-pendentes').text('1');
+}
+
+function salvarNota() {
+    const formData = new FormData(document.getElementById('form-nota'));
+    
+    // Simular salvamento
+    alert('Nota fiscal salva com sucesso!');
+    $('#modalNota').modal('hide');
+    document.getElementById('form-nota').reset();
+    
+    // Redefinir data atual
+    const hoje = new Date().toISOString().split('T')[0];
+    $('input[name="data_emissao"]').val(hoje);
+    
+    carregarNotas();
+    carregarResumo();
+}
+
+function verDetalhes(id) {
+    alert('Funcionalidade de visualização de detalhes será implementada');
+}
+
+function editarNota(id) {
+    alert('Funcionalidade de edição será implementada');
+}
+
+function processarNota(id) {
+    if (confirm('Marcar esta nota fiscal como processada?')) {
+        alert('Nota fiscal processada!');
+        carregarNotas();
+        carregarResumo();
+    }
+}
+
+function excluirNota(id) {
+    if (confirm('Tem certeza que deseja excluir esta nota fiscal?')) {
+        alert('Nota fiscal excluída!');
+        carregarNotas();
+        carregarResumo();
+    }
+}
+
+function limparFiltros() {
+    $('#filtro-tipo, #filtro-status').val('');
+    $('#buscar-nota').val('');
+    
+    // Redefinir datas padrão
+    const hoje = new Date();
+    const primeiroDia = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+    
+    $('#data-inicial').val(primeiroDia.toISOString().split('T')[0]);
+    $('#data-final').val(hoje.toISOString().split('T')[0]);
+    
+    carregarNotas();
+    carregarResumo();
+}
+</script>
+{% endblock %}
+

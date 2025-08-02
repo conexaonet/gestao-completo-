@@ -1,0 +1,428 @@
+{% extends 'dev_base.html' %}
+{% load static %}
+
+{% block title %}Evolução de Gastos - Gestão Empresarial{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-chart-line me-2"></i>
+                Evolução de Gastos
+            </h1>
+            <div class="d-flex gap-2">
+                <select class="form-select" id="select-meses" style="width: auto;">
+                    <option value="3">Últimos 3 meses</option>
+                    <option value="6" selected>Últimos 6 meses</option>
+                    <option value="12">Últimos 12 meses</option>
+                </select>
+                <button class="btn btn-primary" onclick="carregarRelatorio()">
+                    <i class="fas fa-search me-1"></i>Buscar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cards de Resumo -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card stats-card primary card-hover">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-1">Total Contas</h6>
+                        <h3 class="mb-0" id="total-contas">R$ 0,00</h3>
+                    </div>
+                    <div class="text-end">
+                        <i class="fas fa-file-invoice-dollar fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card danger card-hover">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-1">Total Despesas</h6>
+                        <h3 class="mb-0" id="total-despesas">R$ 0,00</h3>
+                    </div>
+                    <div class="text-end">
+                        <i class="fas fa-receipt fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card info card-hover">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-1">Total Geral</h6>
+                        <h3 class="mb-0" id="total-geral">R$ 0,00</h3>
+                    </div>
+                    <div class="text-end">
+                        <i class="fas fa-chart-line fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card success card-hover">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-1">Média Mensal</h6>
+                        <h3 class="mb-0" id="media-mensal">R$ 0,00</h3>
+                    </div>
+                    <div class="text-end">
+                        <i class="fas fa-calculator fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Gráfico Principal -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card card-hover">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-line me-2"></i>
+                    Evolução de Gastos ao Longo do Tempo
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="grafico-evolucao" width="800" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Gráficos Secundários -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card card-hover">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>
+                    Média Mensal por Tipo
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="grafico-medias" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card card-hover">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-pie me-2"></i>
+                    Distribuição Total
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="grafico-distribuicao" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tabela Detalhada -->
+<div class="row">
+    <div class="col-12">
+        <div class="card card-hover">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-table me-2"></i>
+                    Dados Mensais Detalhados
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Mês/Ano</th>
+                                <th>Contas</th>
+                                <th>Despesas</th>
+                                <th>Total</th>
+                                <th>Qtd Contas</th>
+                                <th>Qtd Despesas</th>
+                                <th>Média Diária</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabela-mensal">
+                            <tr>
+                                <td colspan="7" class="text-center text-muted">Carregando...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+let graficoEvolucao = null;
+let graficoMedias = null;
+let graficoDistribuicao = null;
+
+$(document).ready(function() {
+    carregarRelatorio();
+});
+
+function formatarMoeda(valor) {
+    return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+    }).format(valor);
+}
+
+function formatarMes(mes) {
+    const meses = [
+        'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+        'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+    ];
+    return meses[mes - 1];
+}
+
+function carregarRelatorio() {
+    const meses = $('#select-meses').val();
+    
+    fetch(`/api/contas/relatorios/evolucao_gastos/?meses=${meses}`)
+        .then(response => response.json())
+        .then(data => {
+            atualizarCards(data.resumo);
+            atualizarGraficos(data);
+            atualizarTabela(data.dados);
+        })
+        .catch(error => {
+            console.error('Erro ao carregar relatório:', error);
+            mostrarNotificacao('Erro ao carregar relatório', 'error');
+        });
+}
+
+function atualizarCards(resumo) {
+    $('#total-contas').text(formatarMoeda(resumo.total_contas));
+    $('#total-despesas').text(formatarMoeda(resumo.total_despesas));
+    $('#total-geral').text(formatarMoeda(resumo.total_geral));
+    $('#media-mensal').text(formatarMoeda(resumo.media_mensal_contas + resumo.media_mensal_despesas));
+}
+
+function atualizarGraficos(data) {
+    // Gráfico de Evolução Principal
+    const ctxEvolucao = document.getElementById('grafico-evolucao').getContext('2d');
+    if (graficoEvolucao) {
+        graficoEvolucao.destroy();
+    }
+    
+    const labels = data.dados.map(item => item.mes);
+    const dadosContas = data.dados.map(item => item.contas);
+    const dadosDespesas = data.dados.map(item => item.despesas);
+    const dadosTotal = data.dados.map(item => item.total);
+    
+    graficoEvolucao = new Chart(ctxEvolucao, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Contas',
+                    data: dadosContas,
+                    borderColor: '#007bff',
+                    backgroundColor: '#007bff20',
+                    fill: true,
+                    tension: 0.4
+                },
+                {
+                    label: 'Despesas',
+                    data: dadosDespesas,
+                    borderColor: '#dc3545',
+                    backgroundColor: '#dc354520',
+                    fill: true,
+                    tension: 0.4
+                },
+                {
+                    label: 'Total',
+                    data: dadosTotal,
+                    borderColor: '#28a745',
+                    backgroundColor: '#28a74520',
+                    fill: true,
+                    tension: 0.4
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.dataset.label + ': ' + formatarMoeda(context.parsed.y);
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return formatarMoeda(value);
+                        }
+                    }
+                }
+            }
+        }
+    });
+    
+    // Gráfico de Médias
+    const ctxMedias = document.getElementById('grafico-medias').getContext('2d');
+    if (graficoMedias) {
+        graficoMedias.destroy();
+    }
+    
+    graficoMedias = new Chart(ctxMedias, {
+        type: 'bar',
+        data: {
+            labels: ['Contas', 'Despesas'],
+            datasets: [{
+                data: [data.resumo.media_mensal_contas, data.resumo.media_mensal_despesas],
+                backgroundColor: ['#007bff', '#dc3545'],
+                borderColor: ['#007bff', '#dc3545'],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return formatarMoeda(context.parsed.y);
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return formatarMoeda(value);
+                        }
+                    }
+                }
+            }
+        }
+    });
+    
+    // Gráfico de Distribuição
+    const ctxDistribuicao = document.getElementById('grafico-distribuicao').getContext('2d');
+    if (graficoDistribuicao) {
+        graficoDistribuicao.destroy();
+    }
+    
+    graficoDistribuicao = new Chart(ctxDistribuicao, {
+        type: 'doughnut',
+        data: {
+            labels: ['Contas', 'Despesas'],
+            datasets: [{
+                data: [data.resumo.total_contas, data.resumo.total_despesas],
+                backgroundColor: ['#007bff', '#dc3545'],
+                borderColor: ['#007bff', '#dc3545'],
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentual = ((context.parsed / total) * 100).toFixed(1);
+                            return context.label + ': ' + formatarMoeda(context.parsed) + ' (' + percentual + '%)';
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function atualizarTabela(dados) {
+    let html = '';
+    
+    if (dados.length === 0) {
+        html = '<tr><td colspan="7" class="text-center text-muted">Nenhum dado encontrado</td></tr>';
+    } else {
+        dados.forEach(item => {
+            const mediaDiaria = item.total / 30; // Aproximação de 30 dias por mês
+            
+            html += `
+                <tr>
+                    <td><strong>${item.mes}</strong></td>
+                    <td><span class="text-primary">${formatarMoeda(item.contas)}</span></td>
+                    <td><span class="text-danger">${formatarMoeda(item.despesas)}</span></td>
+                    <td><strong>${formatarMoeda(item.total)}</strong></td>
+                    <td>
+                        <span class="badge bg-primary">${item.quantidade_contas}</span>
+                    </td>
+                    <td>
+                        <span class="badge bg-danger">${item.quantidade_despesas}</span>
+                    </td>
+                    <td>
+                        <small class="text-muted">${formatarMoeda(mediaDiaria)}</small>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+    
+    $('#tabela-mensal').html(html);
+}
+
+function mostrarNotificacao(mensagem, tipo) {
+    const alertClass = tipo === 'success' ? 'alert-success' : 'alert-danger';
+    const icon = tipo === 'success' ? 'fas fa-check' : 'fas fa-exclamation-triangle';
+    
+    const alert = `
+        <div class="alert ${alertClass} alert-dismissible fade show position-fixed" 
+             style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;">
+            <i class="${icon} me-2"></i>
+            ${mensagem}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    $('body').append(alert);
+    
+    setTimeout(() => {
+        $('.alert').fadeOut();
+    }, 5000);
+}
+</script>
+{% endblock %} 
