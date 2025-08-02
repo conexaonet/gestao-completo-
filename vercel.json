@@ -1,0 +1,17 @@
+{
+  "builds": [
+    {
+      "src": "gestao_empresarial/wsgi.py",
+      "use": "@vercel/python"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "gestao_empresarial/wsgi.py"
+    }
+  ],
+  "env": {
+    "PYTHONPATH": "."
+  }
+} 
