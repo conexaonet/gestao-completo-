@@ -53,6 +53,35 @@ class ContaPagar(models.Model):
         verbose_name='Conta Principal'
     )
     
+    # Recorrência
+    eh_recorrente = models.BooleanField(default=False, verbose_name='É Recorrente')
+    TIPO_RECORRENCIA_CHOICES = [
+        ('mensal', 'Mensal'),
+        ('bimestral', 'Bimestral'),
+        ('trimestral', 'Trimestral'),
+        ('semestral', 'Semestral'),
+        ('anual', 'Anual'),
+        ('semanal', 'Semanal'),
+        ('quinzenal', 'Quinzenal'),
+    ]
+    tipo_recorrencia = models.CharField(
+        max_length=20, 
+        choices=TIPO_RECORRENCIA_CHOICES, 
+        null=True, 
+        blank=True,
+        verbose_name='Tipo de Recorrência'
+    )
+    data_fim_recorrencia = models.DateField(
+        null=True, 
+        blank=True, 
+        verbose_name='Data de Fim da Recorrência'
+    )
+    proxima_geracao = models.DateField(
+        null=True, 
+        blank=True, 
+        verbose_name='Próxima Geração'
+    )
+    
     # Controle
     observacoes = models.TextField(blank=True, verbose_name='Observações')
     data_pagamento = models.DateField(null=True, blank=True, verbose_name='Data de Pagamento')

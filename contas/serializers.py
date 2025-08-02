@@ -45,7 +45,8 @@ class ContaPagarListSerializer(serializers.ModelSerializer):
             'id', 'descricao', 'valor', 'valor_formatado', 'data_vencimento',
             'status', 'status_display_class', 'categoria', 'fornecedor',
             'eh_parcelado', 'numero_parcelas', 'parcela_atual', 'esta_vencida',
-            'dias_para_vencimento', 'observacoes', 'criado_em'
+            'dias_para_vencimento', 'observacoes', 'criado_em',
+            'eh_recorrente', 'tipo_recorrencia', 'data_fim_recorrencia', 'proxima_geracao'
         ]
 
 class DespesaDiariaSerializer(serializers.ModelSerializer):

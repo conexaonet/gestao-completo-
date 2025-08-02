@@ -195,6 +195,22 @@ class ContaPagarViewSet(viewsets.ModelViewSet):
         
         return Response(resultado)
     
+    @action(detail=False, methods=['get'])
+    def recorrentes(self, request):
+        """Retorna todas as contas recorrentes"""
+        contas = self.get_queryset().filter(eh_recorrente=True)
+        
+        total = contas.aggregate(total=Sum('valor'))['total'] or 0
+        quantidade = contas.count()
+        
+        serializer = self.get_serializer(contas, many=True)
+        
+        return Response({
+            'contas': serializer.data,
+            'total': total,
+            'quantidade': quantidade
+        })
+    
     @action(detail=True, methods=['post'])
     def marcar_pago(self, request, pk=None):
         """Marca uma conta como paga"""
