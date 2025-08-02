@@ -4,38 +4,6 @@
 {% block title %}Contas a Pagar - Gestão Empresarial{% endblock %}
 
 {% block content %}
-<style>
-    .stats-card {
-        transition: all 0.3s ease;
-    }
-    
-    .stats-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    }
-    
-    .stats-card.active-filter {
-        border: 3px solid #007bff;
-        box-shadow: 0 0 0 0.2rem rgba(0,123,255,0.25);
-    }
-    
-    .card-hover:hover {
-        transform: translateY(-2px);
-    }
-    
-    .fornecedor-card {
-        transition: all 0.3s ease;
-    }
-    
-    .fornecedor-card:hover {
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    
-    .stats-card.primary {
-        background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
-        color: white;
-    }
-</style>
 <div class="row">
     <div class="col-12">
         <div class="d-flex justify-content-between align-items-center mb-4">
@@ -53,27 +21,8 @@
 
 <!-- Status de Vencimentos -->
 <div class="row mb-4">
-    <div class="col-md-3">
-        <div class="card stats-card danger card-hover" style="cursor: pointer;" onclick="carregarContasPorStatus('vencidas')">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="card-title mb-1">
-                            <i class="fas fa-exclamation-triangle me-2"></i>
-                            Vencidas
-                        </h6>
-                        <h2 class="mb-0" id="total-vencidas">R$ 0,00</h2>
-                        <small class="text-white-50" id="quantidade-vencidas">0 contas</small>
-                    </div>
-                    <div class="text-end">
-                        <i class="fas fa-exclamation-triangle fa-2x opacity-50"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card stats-card warning card-hover" style="cursor: pointer;" onclick="carregarContasPorStatus('hoje')">
+    <div class="col-md-6">
+        <div class="card stats-card warning card-hover">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
@@ -91,39 +40,20 @@
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card stats-card info card-hover" style="cursor: pointer;" onclick="carregarContasPorStatus('amanha')">
+    <div class="col-md-6">
+        <div class="card stats-card info card-hover">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <h6 class="card-title mb-1">
-                            <i class="fas fa-calendar-week me-2"></i>
+                            <i class="fas fa-calendar-plus me-2"></i>
                             Vencem Amanhã
                         </h6>
                         <h2 class="mb-0" id="total-amanha">R$ 0,00</h2>
                         <small class="text-white-50" id="quantidade-amanha">0 contas</small>
                     </div>
                     <div class="text-end">
-                        <i class="fas fa-calendar-week fa-2x opacity-50"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card stats-card primary card-hover" style="cursor: pointer;" onclick="carregarContasPorStatus('pendentes')">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="card-title mb-1">
-                            <i class="fas fa-clock me-2"></i>
-                            Pendentes
-                        </h6>
-                        <h2 class="mb-0" id="total-pendentes">R$ 0,00</h2>
-                        <small class="text-white-50" id="quantidade-pendentes">0 contas</small>
-                    </div>
-                    <div class="text-end">
-                        <i class="fas fa-clock fa-2x opacity-50"></i>
+                        <i class="fas fa-calendar-plus fa-2x opacity-50"></i>
                     </div>
                 </div>
             </div>
@@ -142,7 +72,7 @@
                 </h5>
             </div>
             <div class="card-body">
-                <div class="row g-3">
+                <div class="row">
                     <div class="col-md-3">
                         <label class="form-label">Status</label>
                         <select class="form-select" id="filtro-status">
@@ -150,7 +80,6 @@
                             <option value="pendente">Pendente</option>
                             <option value="pago">Pago</option>
                             <option value="vencido">Vencido</option>
-                            <option value="vencidas">Vencidas</option>
                         </select>
                     </div>
                     <div class="col-md-3">
@@ -161,13 +90,12 @@
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Buscar</label>
-                        <input type="text" class="form-control" id="filtro-busca" placeholder="Buscar por fornecedor...">
+                        <input type="text" class="form-control" id="buscar-conta" placeholder="Buscar por fornecedor...">
                     </div>
                     <div class="col-md-2">
                         <label class="form-label">&nbsp;</label>
                         <button class="btn btn-outline-secondary w-100" onclick="limparFiltros()">
-                            <i class="fas fa-times me-1"></i>
-                            Limpar
+                            <i class="fas fa-times me-1"></i>Limpar
                         </button>
                     </div>
                 </div>
@@ -341,13 +269,13 @@ $(document).ready(function() {
     carregarFornecedores();
     carregarStatusVencimentos();
     
-    // Event listeners para filtros
-    $('#filtro-status, #filtro-categoria').on('change', function() {
-        carregarContas();
+    // Filtros
+    $('#filtro-status, #filtro-categoria').change(function() {
+        carregarFornecedores();
     });
     
-    $('#filtro-busca').on('input', function() {
-        carregarContas();
+    $('#buscar-conta').on('input', function() {
+        carregarFornecedores();
     });
     
     // Controle de parcelamento
@@ -432,19 +360,6 @@ function calcularParcela() {
 }
 
 function carregarStatusVencimentos() {
-    // Carregar contas vencidas
-    fetch('/api/contas/contas-pagar/vencidas/')
-        .then(response => response.json())
-        .then(data => {
-            $('#total-vencidas').text(formatarMoeda(data.total || 0));
-            $('#quantidade-vencidas').text(`${data.quantidade} conta${data.quantidade !== 1 ? 's' : ''}`);
-        })
-        .catch(error => {
-            console.error('Erro ao carregar contas vencidas:', error);
-            $('#total-vencidas').text('R$ 0,00');
-            $('#quantidade-vencidas').text('0 contas');
-        });
-    
     // Carregar contas de hoje
     fetch('/api/contas/contas-pagar/hoje/')
         .then(response => response.json())
@@ -469,19 +384,6 @@ function carregarStatusVencimentos() {
             console.error('Erro ao carregar contas de amanhã:', error);
             $('#total-amanha').text('R$ 0,00');
             $('#quantidade-amanha').text('0 contas');
-        });
-    
-    // Carregar contas pendentes
-    fetch('/api/contas/contas-pagar/pendentes/')
-        .then(response => response.json())
-        .then(data => {
-            $('#total-pendentes').text(formatarMoeda(data.total || 0));
-            $('#quantidade-pendentes').text(`${data.quantidade} conta${data.quantidade !== 1 ? 's' : ''}`);
-        })
-        .catch(error => {
-            console.error('Erro ao carregar contas pendentes:', error);
-            $('#total-pendentes').text('R$ 0,00');
-            $('#quantidade-pendentes').text('0 contas');
         });
 }
 
@@ -526,189 +428,115 @@ function carregarFornecedores() {
         });
     
     // Carregar lista de fornecedores com contas
-    carregarContas();
-}
-
-function carregarContas() {
-    const status = $('#filtro-status').val();
-    const categoria = $('#filtro-categoria').val();
-    const busca = $('#filtro-busca').val();
-    
-    let url = '/api/contas/contas-pagar/por_fornecedor/';
-    const params = new URLSearchParams();
-    
-    if (status) {
-        if (status === 'vencidas') {
-            // Filtro especial para contas vencidas
-            url = '/api/contas/contas-pagar/vencidas/';
-        } else {
-            params.append('status', status);
-        }
-    }
-    
-    if (categoria) {
-        params.append('categoria', categoria);
-    }
-    
-    if (busca) {
-        params.append('search', busca);
-    }
-    
-    if (params.toString()) {
-        url += '?' + params.toString();
-    }
-    
-    fetch(url)
+    fetch('/api/contas/contas-pagar/por_fornecedor/')
         .then(response => response.json())
         .then(data => {
-            if (status === 'vencidas') {
-                // Formatar dados de contas vencidas
-                const contasVencidas = data.contas || [];
-                const fornecedores = {};
-                
-                contasVencidas.forEach(conta => {
-                    const fornecedor = conta.descricao || 'Sem fornecedor';
-                    if (!fornecedores[fornecedor]) {
-                        fornecedores[fornecedor] = {
-                            fornecedor: fornecedor,
-                            total_valor: 0,
-                            total_parcelas: 0,
-                            parcelas_pagas: 0,
-                            parcelas_pendentes: 0,
-                            primeiro_vencimento: null,
-                            ultimo_vencimento: null,
-                            categoria: conta.categoria || 'Sem categoria',
-                            categoria_cor: '#6c757d',
-                            contas: []
-                        };
-                    }
+            let html = '';
+            
+            if (data.length === 0) {
+                html = '<div class="text-center"><p class="text-muted">Nenhum fornecedor encontrado</p></div>';
+            } else {
+                data.forEach(fornecedor => {
+                    const progresso = fornecedor.total_parcelas > 0 ? 
+                        (fornecedor.parcelas_pagas / fornecedor.total_parcelas) * 100 : 0;
                     
-                    fornecedores[fornecedor].total_valor += parseFloat(conta.valor);
-                    fornecedores[fornecedor].total_parcelas += 1;
-                    fornecedores[fornecedor].parcelas_pendentes += 1;
-                    fornecedores[fornecedor].contas.push(conta);
+                    html += `
+                        <div class="card mb-3 fornecedor-card" data-fornecedor="${fornecedor.fornecedor}">
+                            <div class="card-header bg-light" style="cursor: pointer;" onclick="toggleFornecedor('${fornecedor.fornecedor}')">
+                                <div class="row align-items-center">
+                                    <div class="col-md-4">
+                                        <h6 class="mb-0">
+                                            <i class="fas fa-building me-2"></i>
+                                            <strong>${fornecedor.fornecedor}</strong>
+                                        </h6>
+                                        <small class="text-muted">
+                                            <span class="badge" style="background-color: ${fornecedor.categoria_cor}">
+                                                ${fornecedor.categoria}
+                                            </span>
+                                        </small>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="text-center">
+                                            <h5 class="mb-0 text-success">${formatarMoeda(fornecedor.total_valor)}</h5>
+                                            <small class="text-muted">Total</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="text-center">
+                                            <h6 class="mb-0">${fornecedor.total_parcelas}</h6>
+                                            <small class="text-muted">Parcelas</small>
+                                            <div class="progress mt-1" style="height: 4px;">
+                                                <div class="progress-bar bg-success" style="width: ${progresso}%"></div>
+                                            </div>
+                                            <small class="text-muted">${fornecedor.parcelas_pagas} pagas / ${fornecedor.parcelas_pendentes} pendentes</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2 text-end">
+                                        <i class="fas fa-chevron-down" id="icon-${fornecedor.fornecedor.replace(/\s+/g, '-')}"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body" id="detalhes-${fornecedor.fornecedor.replace(/\s+/g, '-')}" style="display: none;">
+                                <div class="table-responsive">
+                                    <table class="table table-sm">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Parcela</th>
+                                                <th>Valor</th>
+                                                <th>Vencimento</th>
+                                                <th>Status</th>
+                                                <th>Ações</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${fornecedor.contas.map(conta => {
+                                                const statusClass = conta.status === 'pendente' ? 'warning' : 'success';
+                                                const parcelaInfo = conta.eh_parcelado ? 
+                                                    `Parcela ${conta.parcela_atual}/${conta.numero_parcelas}` : 'Única';
+                                                
+                                                return `
+                                                    <tr>
+                                                        <td>${parcelaInfo}</td>
+                                                        <td><strong>${formatarMoeda(conta.valor)}</strong></td>
+                                                        <td>
+                                                            <i class="fas fa-calendar me-1"></i>
+                                                            ${new Date(conta.data_vencimento).toLocaleDateString('pt-BR')}
+                                                        </td>
+                                                        <td>
+                                                            <span class="badge bg-${statusClass}">
+                                                                ${conta.status.charAt(0).toUpperCase() + conta.status.slice(1)}
+                                                            </span>
+                                                        </td>
+                                                        <td>
+                                                            <div class="btn-group btn-group-sm">
+                                                                ${conta.status === 'pendente' ? 
+                                                                    `<button class="btn btn-outline-success" onclick="marcarPago(${conta.id})" title="Marcar como pago">
+                                                                        <i class="fas fa-check"></i>
+                                                                    </button>` : ''
+                                                                }
+                                                                <button class="btn btn-outline-danger" onclick="excluirConta(${conta.id})" title="Excluir">
+                                                                    <i class="fas fa-trash"></i>
+                                                                </button>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                `;
+                                            }).join('')}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    `;
                 });
-                
-                data = Object.values(fornecedores);
             }
             
-            exibirContas(data);
+            $('#lista-fornecedores').html(html);
         })
         .catch(error => {
-            console.error('Erro ao carregar contas:', error);
-            $('#lista-contas').html('<div class="alert alert-danger">Erro ao carregar contas</div>');
+            console.error('Erro ao carregar fornecedores:', error);
+            $('#lista-fornecedores').html('<div class="text-center text-danger">Erro ao carregar dados</div>');
         });
-}
-
-function carregarContasPorStatus(status) {
-    // Limpar outros filtros
-    $('#filtro-categoria').val('');
-    $('#filtro-busca').val('');
-    
-    // Definir o endpoint baseado no tipo
-    let url = '/api/contas/contas-pagar/por_fornecedor/';
-    
-    switch(status) {
-        case 'vencidas':
-            url = '/api/contas/contas-pagar/vencidas/';
-            break;
-        case 'hoje':
-            url = '/api/contas/contas-pagar/hoje/';
-            break;
-        case 'amanha':
-            url = '/api/contas/contas-pagar/amanha/';
-            break;
-        case 'pendentes':
-            url = '/api/contas/contas-pagar/pendentes/';
-            break;
-    }
-    
-    // Limpar filtro de status
-    $('#filtro-status').val('');
-    
-    // Adicionar indicador visual de filtro ativo
-    $('.stats-card').removeClass('active-filter');
-    $(`.stats-card[onclick*="${status}"]`).addClass('active-filter');
-    
-    // Carregar contas usando o endpoint específico
-    carregarContasPorEndpoint(url);
-    
-    // Mostrar mensagem de filtro ativo
-    mostrarMensagemFiltro(status);
-}
-
-function carregarContasPorEndpoint(url) {
-    fetch(url)
-        .then(response => response.json())
-        .then(data => {
-            // Formatar dados para exibição
-            let fornecedores = {};
-            
-            if (data.contas) {
-                // Dados vindos de endpoints específicos (hoje, amanha, vencidas, pendentes)
-                data.contas.forEach(conta => {
-                    const fornecedor = conta.descricao || 'Sem fornecedor';
-                    if (!fornecedores[fornecedor]) {
-                        fornecedores[fornecedor] = {
-                            fornecedor: fornecedor,
-                            total_valor: 0,
-                            total_parcelas: 0,
-                            parcelas_pagas: 0,
-                            parcelas_pendentes: 0,
-                            primeiro_vencimento: null,
-                            ultimo_vencimento: null,
-                            categoria: conta.categoria || 'Sem categoria',
-                            categoria_cor: '#6c757d',
-                            contas: []
-                        };
-                    }
-                    
-                    fornecedores[fornecedor].total_valor += parseFloat(conta.valor);
-                    fornecedores[fornecedor].total_parcelas += 1;
-                    fornecedores[fornecedor].parcelas_pendentes += 1;
-                    fornecedores[fornecedor].contas.push(conta);
-                });
-                
-                data = Object.values(fornecedores);
-            }
-            
-            exibirContas(data);
-        })
-        .catch(error => {
-            console.error('Erro ao carregar contas:', error);
-            $('#lista-fornecedores').html('<div class="alert alert-danger">Erro ao carregar contas</div>');
-        });
-}
-
-function mostrarMensagemFiltro(status) {
-    let mensagem = '';
-    switch(status) {
-        case 'vencidas':
-            mensagem = 'Mostrando contas vencidas';
-            break;
-        case 'hoje':
-            mensagem = 'Mostrando contas que vencem hoje';
-            break;
-        case 'amanha':
-            mensagem = 'Mostrando contas que vencem amanhã';
-            break;
-        case 'pendentes':
-            mensagem = 'Mostrando todas as contas pendentes';
-            break;
-    }
-    
-    // Criar ou atualizar mensagem de filtro
-    let filtroMsg = $('#filtro-mensagem');
-    if (filtroMsg.length === 0) {
-        filtroMsg = $('<div id="filtro-mensagem" class="alert alert-info alert-dismissible fade show" role="alert"></div>');
-        $('.row.mb-4').after(filtroMsg);
-    }
-    
-    filtroMsg.html(`
-        <i class="fas fa-filter me-2"></i>
-        <strong>Filtro ativo:</strong> ${mensagem}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" onclick="limparFiltros()"></button>
-    `);
 }
 
 function toggleFornecedor(fornecedor) {
@@ -837,15 +665,8 @@ function excluirConta(id) {
 
 function limparFiltros() {
     $('#filtro-status, #filtro-categoria').val('');
-    $('#filtro-busca').val('');
-    
-    // Remover indicador visual de filtro ativo
-    $('.stats-card').removeClass('active-filter');
-    
-    // Remover mensagem de filtro
-    $('#filtro-mensagem').remove();
-    
-    carregarContas();
+    $('#buscar-conta').val('');
+    carregarFornecedores();
 }
 
 function abrirModalFornecedor() {
@@ -891,110 +712,6 @@ function getCookie(name) {
         }
     }
     return cookieValue;
-}
-
-function exibirContas(data) {
-    let html = '';
-    
-    if (data.length === 0) {
-        html = '<div class="text-center"><p class="text-muted">Nenhum fornecedor encontrado</p></div>';
-    } else {
-        data.forEach(fornecedor => {
-            const progresso = fornecedor.total_parcelas > 0 ? 
-                (fornecedor.parcelas_pagas / fornecedor.total_parcelas) * 100 : 0;
-            
-            html += `
-                <div class="card mb-3 fornecedor-card" data-fornecedor="${fornecedor.fornecedor}">
-                    <div class="card-header bg-light" style="cursor: pointer;" onclick="toggleFornecedor('${fornecedor.fornecedor}')">
-                        <div class="row align-items-center">
-                            <div class="col-md-4">
-                                <h6 class="mb-0">
-                                    <i class="fas fa-building me-2"></i>
-                                    <strong>${fornecedor.fornecedor}</strong>
-                                </h6>
-                                <small class="text-muted">
-                                    <span class="badge" style="background-color: ${fornecedor.categoria_cor}">
-                                        ${fornecedor.categoria}
-                                    </span>
-                                </small>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="text-center">
-                                    <h5 class="mb-0 text-success">${formatarMoeda(fornecedor.total_valor)}</h5>
-                                    <small class="text-muted">Total</small>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="text-center">
-                                    <h6 class="mb-0">${fornecedor.total_parcelas}</h6>
-                                    <small class="text-muted">Parcelas</small>
-                                    <div class="progress mt-1" style="height: 4px;">
-                                        <div class="progress-bar bg-success" style="width: ${progresso}%"></div>
-                                    </div>
-                                    <small class="text-muted">${fornecedor.parcelas_pagas} pagas / ${fornecedor.parcelas_pendentes} pendentes</small>
-                                </div>
-                            </div>
-                            <div class="col-md-2 text-end">
-                                <i class="fas fa-chevron-down" id="icon-${fornecedor.fornecedor.replace(/\s+/g, '-')}"></i>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card-body" id="detalhes-${fornecedor.fornecedor.replace(/\s+/g, '-')}" style="display: none;">
-                        <div class="table-responsive">
-                            <table class="table table-sm">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Parcela</th>
-                                        <th>Valor</th>
-                                        <th>Vencimento</th>
-                                        <th>Status</th>
-                                        <th>Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${fornecedor.contas.map(conta => {
-                                        const statusClass = conta.status === 'pendente' ? 'warning' : 'success';
-                                        const parcelaInfo = conta.eh_parcelado ? 
-                                            `Parcela ${conta.parcela_atual}/${conta.numero_parcelas}` : 'Única';
-                                        
-                                        return `
-                                            <tr>
-                                                <td>${parcelaInfo}</td>
-                                                <td><strong>${formatarMoeda(conta.valor)}</strong></td>
-                                                <td>
-                                                    <i class="fas fa-calendar me-1"></i>
-                                                    ${new Date(conta.data_vencimento).toLocaleDateString('pt-BR')}
-                                                </td>
-                                                <td>
-                                                    <span class="badge bg-${statusClass}">
-                                                        ${conta.status.charAt(0).toUpperCase() + conta.status.slice(1)}
-                                                    </span>
-                                                </td>
-                                                <td>
-                                                    <div class="btn-group btn-group-sm">
-                                                        ${conta.status === 'pendente' ? 
-                                                            `<button class="btn btn-outline-success" onclick="marcarPago(${conta.id})" title="Marcar como pago">
-                                                                <i class="fas fa-check"></i>
-                                                            </button>` : ''
-                                                            }
-                                                        <button class="btn btn-outline-danger" onclick="excluirConta(${conta.id})" title="Excluir">
-                                                            <i class="fas fa-trash"></i>
-                                                        </button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        `;
-                                    }).join('')}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            `;
-        });
-    }
-    
-    $('#lista-fornecedores').html(html);
 }
 </script>
 {% endblock %}
